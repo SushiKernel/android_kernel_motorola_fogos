@@ -2896,13 +2896,8 @@ static int aead_authenc_setkey(struct crypto_aead *cipher,
 		ctx->fallback_cipher->base.crt_flags |=
 		    tfm->crt_flags & CRYPTO_TFM_REQ_MASK;
 		ret = crypto_aead_setkey(ctx->fallback_cipher, key, keylen);
-		if (ret) {
+		if (ret)
 			flow_log("  fallback setkey() returned:%d\n", ret);
-			tfm->crt_flags &= ~CRYPTO_TFM_RES_MASK;
-			tfm->crt_flags |=
-			    (ctx->fallback_cipher->base.crt_flags &
-			     CRYPTO_TFM_RES_MASK);
-		}
 	}
 
 	ctx->spu_resp_hdr_len = spu->spu_response_hdr_len(ctx->authkeylen,
@@ -2969,13 +2964,8 @@ static int aead_gcm_ccm_setkey(struct crypto_aead *cipher,
 		    tfm->crt_flags & CRYPTO_TFM_REQ_MASK;
 		ret = crypto_aead_setkey(ctx->fallback_cipher, key,
 					 keylen + ctx->salt_len);
-		if (ret) {
+		if (ret)
 			flow_log("  fallback setkey() returned:%d\n", ret);
-			tfm->crt_flags &= ~CRYPTO_TFM_RES_MASK;
-			tfm->crt_flags |=
-			    (ctx->fallback_cipher->base.crt_flags &
-			     CRYPTO_TFM_RES_MASK);
-		}
 	}
 
 	ctx->spu_resp_hdr_len = spu->spu_response_hdr_len(ctx->authkeylen,

@@ -125,13 +125,6 @@ static int ppc_xts_setkey(struct crypto_tfm *tfm, const u8 *in_key,
 
 	key_len >>= 1;
 
-	if (key_len != AES_KEYSIZE_128 &&
-	    key_len != AES_KEYSIZE_192 &&
-	    key_len != AES_KEYSIZE_256) {
-		tfm->crt_flags |= CRYPTO_TFM_RES_BAD_KEY_LEN;
-		return -EINVAL;
-	}
-
 	switch (key_len) {
 	case AES_KEYSIZE_128:
 		ctx->rounds = 4;

@@ -150,11 +150,7 @@ static int ecb_paes_set_key(struct crypto_tfm *tfm, const u8 *in_key,
 	if (rc)
 		return rc;
 
-	if (__paes_set_key(ctx)) {
-		tfm->crt_flags |= CRYPTO_TFM_RES_BAD_KEY_LEN;
-		return -EINVAL;
-	}
-	return 0;
+	return __paes_set_key(ctx);
 }
 
 static int ecb_paes_crypt(struct blkcipher_desc *desc,
@@ -269,11 +265,7 @@ static int cbc_paes_set_key(struct crypto_tfm *tfm, const u8 *in_key,
 	if (rc)
 		return rc;
 
-	if (__cbc_paes_set_key(ctx)) {
-		tfm->crt_flags |= CRYPTO_TFM_RES_BAD_KEY_LEN;
-		return -EINVAL;
-	}
-	return 0;
+	return __cbc_paes_set_key(ctx);
 }
 
 static int cbc_paes_crypt(struct blkcipher_desc *desc, unsigned long modifier,
@@ -413,10 +405,9 @@ static int xts_paes_set_key(struct crypto_tfm *tfm, const u8 *in_key,
 	if (rc)
 		return rc;
 
-	if (__xts_paes_set_key(ctx)) {
-		tfm->crt_flags |= CRYPTO_TFM_RES_BAD_KEY_LEN;
-		return -EINVAL;
-	}
+	rc = __xts_paes_set_key(ctx);
+	if (rc)
+		return rc;
 
 	/*
 	 * xts_check_key verifies the key length is not odd and makes
@@ -566,11 +557,7 @@ static int ctr_paes_set_key(struct crypto_tfm *tfm, const u8 *in_key,
 	if (rc)
 		return rc;
 
-	if (__ctr_paes_set_key(ctx)) {
-		tfm->crt_flags |= CRYPTO_TFM_RES_BAD_KEY_LEN;
-		return -EINVAL;
-	}
-	return 0;
+	return __ctr_paes_set_key(ctx);
 }
 
 static unsigned int __ctrblk_init(u8 *ctrptr, u8 *iv, unsigned int nbytes)
