@@ -184,6 +184,8 @@ __SYSCALL(__NR_fchown, sys_fchown)
 __SYSCALL(__NR_openat, sys_openat)
 #define __NR_close 57
 __SYSCALL(__NR_close, sys_close)
+#define __NR_openat2 437
+__SYSCALL(__NR_openat2, sys_openat2)
 #define __NR_vhangup 58
 __SYSCALL(__NR_vhangup, sys_vhangup)
 
