@@ -779,11 +779,8 @@ out:
 static int psi_rtpoll_worker(void *data)
 {
 	struct psi_group *group = (struct psi_group *)data;
-	struct sched_param param = {
-		.sched_priority = 1,
-	};
 
-	sched_setscheduler_nocheck(current, SCHED_FIFO, &param);
+	sched_set_fifo_low(current);
 
 	while (true) {
 		wait_event_interruptible(group->rtpoll_wait,
