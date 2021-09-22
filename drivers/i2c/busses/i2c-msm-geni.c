@@ -1487,14 +1487,6 @@ static int geni_i2c_remove(struct platform_device *pdev)
 	return 0;
 }
 
-static int geni_i2c_resume_early(struct device *device)
-{
-	struct geni_i2c_dev *gi2c = dev_get_drvdata(device);
-
-	GENI_SE_DBG(gi2c->ipcl, false, gi2c->dev, "%s\n", __func__);
-	return 0;
-}
-
 /*
  * get sync/put sync in LA-VM -> do resources on/off
  * get sync/put sync in LE-VM -> do lock/unlock gpii
@@ -1630,7 +1622,6 @@ static int geni_i2c_suspend_late(struct device *device)
 
 static const struct dev_pm_ops geni_i2c_pm_ops = {
 	.suspend_late		= geni_i2c_suspend_late,
-	.resume_early		= geni_i2c_resume_early,
 	.runtime_suspend	= geni_i2c_runtime_suspend,
 	.runtime_resume		= geni_i2c_runtime_resume,
 };
