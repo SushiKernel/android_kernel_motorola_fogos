@@ -636,7 +636,6 @@ static noinstr void rcu_eqs_enter(bool user)
 	instrumentation_begin();
 	trace_rcu_dyntick(TPS("Start"), rdp->dynticks_nesting, 0, atomic_read(&rdp->dynticks));
 	WARN_ON_ONCE(IS_ENABLED(CONFIG_RCU_EQS_DEBUG) && !user && !is_idle_task(current));
-	rcu_prepare_for_idle();
 	rcu_preempt_deferred_qs(current);
 	instrumentation_end();
 	WRITE_ONCE(rdp->dynticks_nesting, 0); /* Avoid irq-access tearing. */
@@ -750,9 +749,6 @@ noinstr void rcu_nmi_exit(void)
 	/* This NMI interrupted an RCU-idle CPU, restore RCU-idleness. */
 	trace_rcu_dyntick(TPS("Startirq"), rdp->dynticks_nmi_nesting, 0, atomic_read(&rdp->dynticks));
 	WRITE_ONCE(rdp->dynticks_nmi_nesting, 0); /* Avoid store tearing. */
-
-	if (!in_nmi())
-		rcu_prepare_for_idle();
 	instrumentation_end();
 
 	// RCU is watching here ...
@@ -848,7 +844,6 @@ static void noinstr rcu_eqs_exit(bool user)
 	rcu_dynticks_eqs_exit();
 	// ... but is watching here.
 	instrumentation_begin();
-	rcu_cleanup_after_idle();
 	trace_rcu_dyntick(TPS("End"), rdp->dynticks_nesting, 1, atomic_read(&rdp->dynticks));
 	WARN_ON_ONCE(IS_ENABLED(CONFIG_RCU_EQS_DEBUG) && !user && !is_idle_task(current));
 	WRITE_ONCE(rdp->dynticks_nesting, 1);
@@ -990,12 +985,6 @@ noinstr void rcu_nmi_enter(void)
 		// RCU is not watching here ...
 		rcu_dynticks_eqs_exit();
 		// ... but is watching here.
-
-		if (!in_nmi()) {
-			instrumentation_begin();
-			rcu_cleanup_after_idle();
-			instrumentation_end();
-		}
 
 		incby = 1;
 	} else if (!in_nmi()) {
