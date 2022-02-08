@@ -60,7 +60,7 @@ static int __blk_mq_get_tag(struct blk_mq_alloc_data *data,
 			    struct sbitmap_queue *bt)
 {
 	if (data->shallow_depth)
-		return __sbitmap_queue_get_shallow(bt, data->shallow_depth);
+		return sbitmap_queue_get_shallow(bt, data->shallow_depth);
 	else
 		return __sbitmap_queue_get(bt);
 }
