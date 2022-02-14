@@ -60,8 +60,6 @@ static inline bool rcu_current_is_nocb_kthread(struct rcu_data *rdp)
  * Parse the boot-time rcu_nocb_mask CPU list from the kernel parameters.
  * If the list is invalid, a warning is emitted and all CPUs are offloaded.
  */
-static bool rcu_nocb_is_setup;
-
 static int __init rcu_nocb_setup(char *str)
 {
 	alloc_bootmem_cpumask_var(&rcu_nocb_mask);
@@ -71,7 +69,7 @@ static int __init rcu_nocb_setup(char *str)
 			cpumask_setall(rcu_nocb_mask);
 		}
 	}
-	rcu_nocb_is_setup = true;
+	rcu_state.nocb_is_setup = true;
 	return 1;
 }
 __setup("rcu_nocbs", rcu_nocb_setup);
@@ -1339,7 +1337,7 @@ void __init rcu_init_nohz(void)
 	struct rcu_data *rdp;
 
 #if defined(CONFIG_RCU_NOCB_CPU_DEFAULT_ALL)
-	if (!rcu_nocb_is_setup) {
+	if (!rcu_state.nocb_is_setup) {
 		need_rcu_nocb_mask = true;
 		offload_all = true;
 	}
@@ -1362,10 +1360,10 @@ void __init rcu_init_nohz(void)
 				return;
 			}
 		}
-		rcu_nocb_is_setup = true;
+		rcu_state.nocb_is_setup = true;
 	}
 
-	if (!rcu_nocb_is_setup)
+	if (!rcu_state.nocb_is_setup)
 		return;
 
 #if defined(CONFIG_NO_HZ_FULL)
@@ -1429,7 +1427,7 @@ static void rcu_spawn_cpu_nocb_kthread(int cpu)
 	struct task_struct *t;
 	struct sched_param sp;
 
-	if (!rcu_scheduler_fully_active || !rcu_nocb_is_setup)
+	if (!rcu_scheduler_fully_active || !rcu_state.nocb_is_setup)
 		return;
 
 	/* If there already is an rcuo kthread, then nothing to do. */
@@ -1475,7 +1473,7 @@ static void __init rcu_spawn_nocb_kthreads(void)
 {
 	int cpu;
 
-	if (rcu_nocb_is_setup) {
+	if (rcu_state.nocb_is_setup) {
 		for_each_online_cpu(cpu)
 			rcu_spawn_cpu_nocb_kthread(cpu);
 	}
