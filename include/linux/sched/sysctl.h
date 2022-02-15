@@ -46,9 +46,6 @@ int sched_proc_update_handler(struct ctl_table *table, int write,
 		void *buffer, size_t *length, loff_t *ppos);
 #endif
 
-extern unsigned int sysctl_sched_dl_period_max;
-extern unsigned int sysctl_sched_dl_period_min;
-
 #ifdef CONFIG_UCLAMP_TASK
 extern unsigned int sysctl_sched_uclamp_util_min;
 extern unsigned int sysctl_sched_uclamp_util_max;
