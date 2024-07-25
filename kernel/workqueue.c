@@ -3356,7 +3356,6 @@ woke_up:
 
 		set_task_comm(worker->task, "kworker/dying");
 		ida_free(&pool->worker_ida, worker->id);
-		WARN_ON_ONCE(!list_empty(&worker->entry));
 		return 0;
 	}
 
