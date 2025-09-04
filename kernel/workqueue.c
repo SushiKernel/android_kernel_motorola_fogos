@@ -7530,8 +7530,6 @@ static void wq_watchdog_timer_fn(struct timer_list *unused)
 	if (!thresh)
 		return;
 
-	rcu_read_lock();
-
 	for_each_pool(pool, pi) {
 		unsigned long pool_ts, touched, ts;
 
@@ -7587,8 +7585,6 @@ static void wq_watchdog_timer_fn(struct timer_list *unused)
 			trace_android_vh_wq_lockup_pool(pool->cpu, pool_ts);
 		}
 	}
-
-	rcu_read_unlock();
 
 	if (lockup_detected)
 		show_all_workqueues();
