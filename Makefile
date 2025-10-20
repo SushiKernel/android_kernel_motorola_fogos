@@ -780,6 +780,22 @@ else ifdef CONFIG_CC_OPTIMIZE_FOR_SIZE
 KBUILD_CFLAGS += -Os
 endif
 
+ifdef CONFIG_CC_IS_CLANG
+ifdef CONFIG_LLVM_POLLY
+KBUILD_CFLAGS += -mllvm -polly \
+			-mllvm -polly-ast-use-context \
+			-mllvm -polly-invariant-load-hoisting \
+			-mllvm -polly-loopfusion-greedy \
+			-mllvm -polly-reschedule=1 \
+			-mllvm -polly-postopts=1 \
+			-mllvm -polly-run-inliner \
+			-mllvm -polly-vectorizer=stripmine
+ifdef CONFIG_LD_DEAD_CODE_DATA_ELIMINATION
+KBUILD_CFLAGS += -mllvm -polly-run-dce
+endif
+endif
+endif
+
 ifdef CONFIG_CC_WERROR
 KBUILD_CFLAGS  += -Werror
 endif
