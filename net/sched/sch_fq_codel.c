@@ -397,35 +397,42 @@ static int fq_codel_change(struct Qdisc *sch, struct nlattr *opt,
 	if (tb[TCA_FQ_CODEL_TARGET]) {
 		u64 target = nla_get_u32(tb[TCA_FQ_CODEL_TARGET]);
 
-		q->cparams.target = (target * NSEC_PER_USEC) >> CODEL_SHIFT;
+		WRITE_ONCE(q->cparams.target,
+			   (target * NSEC_PER_USEC) >> CODEL_SHIFT);
 	}
 
 	if (tb[TCA_FQ_CODEL_CE_THRESHOLD]) {
 		u64 val = nla_get_u32(tb[TCA_FQ_CODEL_CE_THRESHOLD]);
 
-		q->cparams.ce_threshold = (val * NSEC_PER_USEC) >> CODEL_SHIFT;
+		WRITE_ONCE(q->cparams.ce_threshold,
+			   (val * NSEC_PER_USEC) >> CODEL_SHIFT);
 	}
 
 	if (tb[TCA_FQ_CODEL_INTERVAL]) {
 		u64 interval = nla_get_u32(tb[TCA_FQ_CODEL_INTERVAL]);
 
-		q->cparams.interval = (interval * NSEC_PER_USEC) >> CODEL_SHIFT;
+		WRITE_ONCE(q->cparams.interval,
+			   (interval * NSEC_PER_USEC) >> CODEL_SHIFT);
 	}
 
 	if (tb[TCA_FQ_CODEL_LIMIT])
-		sch->limit = nla_get_u32(tb[TCA_FQ_CODEL_LIMIT]);
+		WRITE_ONCE(sch->limit,
+			   nla_get_u32(tb[TCA_FQ_CODEL_LIMIT]));
 
 	if (tb[TCA_FQ_CODEL_ECN])
-		q->cparams.ecn = !!nla_get_u32(tb[TCA_FQ_CODEL_ECN]);
+		WRITE_ONCE(q->cparams.ecn,
+			   !!nla_get_u32(tb[TCA_FQ_CODEL_ECN]));
 
 	if (quantum)
-		q->quantum = quantum;
+		WRITE_ONCE(q->quantum, quantum);
 
 	if (tb[TCA_FQ_CODEL_DROP_BATCH_SIZE])
-		q->drop_batch_size = max(1U, nla_get_u32(tb[TCA_FQ_CODEL_DROP_BATCH_SIZE]));
+		WRITE_ONCE(q->drop_batch_size,
+			   max(1U, nla_get_u32(tb[TCA_FQ_CODEL_DROP_BATCH_SIZE])));
 
 	if (tb[TCA_FQ_CODEL_MEMORY_LIMIT])
-		q->memory_limit = min(1U << 31, nla_get_u32(tb[TCA_FQ_CODEL_MEMORY_LIMIT]));
+		WRITE_ONCE(q->memory_limit,
+			   min(1U << 31, nla_get_u32(tb[TCA_FQ_CODEL_MEMORY_LIMIT])));
 
 	while (sch->q.qlen > sch->limit ||
 	       q->memory_usage > q->memory_limit) {
@@ -518,6 +525,7 @@ init_failure:
 static int fq_codel_dump(struct Qdisc *sch, struct sk_buff *skb)
 {
 	struct fq_codel_sched_data *q = qdisc_priv(sch);
+	codel_time_t ce_threshold;
 	struct nlattr *opts;
 
 	opts = nla_nest_start_noflag(skb, TCA_OPTIONS);
@@ -525,26 +533,27 @@ static int fq_codel_dump(struct Qdisc *sch, struct sk_buff *skb)
 		goto nla_put_failure;
 
 	if (nla_put_u32(skb, TCA_FQ_CODEL_TARGET,
-			codel_time_to_us(q->cparams.target)) ||
+			codel_time_to_us(READ_ONCE(q->cparams.target))) ||
 	    nla_put_u32(skb, TCA_FQ_CODEL_LIMIT,
-			sch->limit) ||
+			READ_ONCE(sch->limit)) ||
 	    nla_put_u32(skb, TCA_FQ_CODEL_INTERVAL,
-			codel_time_to_us(q->cparams.interval)) ||
+			codel_time_to_us(READ_ONCE(q->cparams.interval))) ||
 	    nla_put_u32(skb, TCA_FQ_CODEL_ECN,
-			q->cparams.ecn) ||
+			READ_ONCE(q->cparams.ecn)) ||
 	    nla_put_u32(skb, TCA_FQ_CODEL_QUANTUM,
-			q->quantum) ||
+			READ_ONCE(q->quantum)) ||
 	    nla_put_u32(skb, TCA_FQ_CODEL_DROP_BATCH_SIZE,
-			q->drop_batch_size) ||
+			READ_ONCE(q->drop_batch_size)) ||
 	    nla_put_u32(skb, TCA_FQ_CODEL_MEMORY_LIMIT,
-			q->memory_limit) ||
+			READ_ONCE(q->memory_limit)) ||
 	    nla_put_u32(skb, TCA_FQ_CODEL_FLOWS,
-			q->flows_cnt))
+			READ_ONCE(q->flows_cnt)))
 		goto nla_put_failure;
 
-	if (q->cparams.ce_threshold != CODEL_DISABLED_THRESHOLD &&
+	ce_threshold = READ_ONCE(q->cparams.ce_threshold);
+	if (ce_threshold != CODEL_DISABLED_THRESHOLD &&
 	    nla_put_u32(skb, TCA_FQ_CODEL_CE_THRESHOLD,
-			codel_time_to_us(q->cparams.ce_threshold)))
+			codel_time_to_us(ce_threshold)))
 		goto nla_put_failure;
 
 	return nla_nest_end(skb, opts);
