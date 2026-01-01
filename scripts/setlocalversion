@@ -82,8 +82,8 @@ scm_version()
 				return
 			fi
 			# We print -g{commitish},
-			# using exactly 12 hex chars.
-			head="$(echo $head | cut -c1-12)"
+			# using exactly 8 hex chars.
+			head="$(echo $head | cut -c1-8)"
 			printf '%s%s' -g $head
 		fi
 
