@@ -47,8 +47,7 @@ void vb2_buffer_done(struct vb2_buffer *vb, enum vb2_buffer_state state);
 #define VIDC_DBG_SESSION_RATELIMIT_INTERVAL (1 * HZ)
 #define VIDC_DBG_SESSION_RATELIMIT_BURST 6
 
-#define VIDC_DBG_TAG VIDC_DBG_LABEL ": %6s: %08x: %5s: "
-#define FW_DBG_TAG VIDC_DBG_LABEL ": %6s: "
+#define VIDC_DBG_TAG VIDC_DBG_LABEL ": %6s: %8x: "
 #define DEFAULT_SID ((u32)-1)
 
 /* To enable messages OR these values and
@@ -127,10 +126,10 @@ static inline char *get_debug_level_str(int level)
 
 #define dprintk(__level, sid, __fmt, ...)	\
 	pr_debug(VIDC_DBG_TAG __fmt, get_debug_level_str(__level), sid, \
-					get_codec_name(sid), ##__VA_ARGS__)
+					##__VA_ARGS__)
 
 #define dprintk_firmware(__level, __fmt, ...)	\
-	pr_debug(FW_DBG_TAG __fmt, "fw", ##__VA_ARGS__)
+	pr_debug(VIDC_DBG_TAG __fmt, "fw", ##__VA_ARGS__)
 
 #define dprintk_ratelimit(__level, __fmt, arg...) \
 	do { \
@@ -145,6 +144,7 @@ static inline char *get_debug_level_str(int level)
 		BUG_ON(value);					\
 	} while (0)
 
+
 struct dentry *msm_vidc_debugfs_init_drv(void);
 struct dentry *msm_vidc_debugfs_init_core(struct msm_vidc_core *core,
 		struct dentry *parent);
@@ -154,8 +154,6 @@ void msm_vidc_debugfs_deinit_inst(struct msm_vidc_inst *inst);
 void msm_vidc_debugfs_update(struct msm_vidc_inst *inst,
 		enum msm_vidc_debugfs_event e);
 int msm_vidc_check_ratelimit(void);
-int get_sid(u32 *sid, u32 session_type);
-void update_log_ctxt(u32 sid, u32 session_type, u32 fourcc);
 
 /**
  * 0xx -> allow prints for all sessions
@@ -244,25 +242,6 @@ static inline void msm_vidc_debugfs_update(struct msm_vidc_inst *inst,
 #define d_vpr_p(__fmt, ...) dprintk(VIDC_PERF, DEFAULT_SID, __fmt, ##__VA_ARGS__)
 #define d_vpr_t(__fmt, ...) dprintk(VIDC_PKT, DEFAULT_SID, __fmt, ##__VA_ARGS__)
 #define d_vpr_b(__fmt, ...) dprintk(VIDC_BUS, DEFAULT_SID, __fmt, ##__VA_ARGS__)
-
-static inline char *get_codec_name(u32 sid)
-{
-	if (!sid || sid > vidc_driver->num_ctxt)
-		return ".....";
-
-	return vidc_driver->ctxt[sid-1].name;
-}
-
-static inline void put_sid(u32 sid)
-{
-	if (!sid || sid > vidc_driver->num_ctxt) {
-		d_vpr_e("%s: invalid sid %#x\n",
-			__func__, sid);
-		return;
-	}
-	if (vidc_driver->ctxt[sid-1].used)
-		vidc_driver->ctxt[sid-1].used = 0;
-}
 
 static inline void tic(struct msm_vidc_inst *i, enum profiling_points p,
 				 char *b)
