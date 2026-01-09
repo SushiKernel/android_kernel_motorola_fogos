@@ -542,7 +542,7 @@ struct smb_mmi_charger {
 #define AICL_RANGE2_MIN_MV		5600
 #define AICL_RANGE2_STEP_DELTA_MV	200
 #define AICL_RANGE2_OFFSET		16
-int smblib_get_aicl_cont_threshold(struct smb_mmi_chg_param *param, u8 val_raw)
+static int smblib_get_aicl_cont_threshold(struct smb_mmi_chg_param *param, u8 val_raw)
 {
 	int base = param->min_u;
 	u8 reg = val_raw;
@@ -558,7 +558,7 @@ int smblib_get_aicl_cont_threshold(struct smb_mmi_chg_param *param, u8 val_raw)
 	return base + (reg * step);
 }
 
-int smblib_set_aicl_cont_threshold(struct smb_mmi_chg_param *param,
+static int smblib_set_aicl_cont_threshold(struct smb_mmi_chg_param *param,
 				int val_u, u8 *val_raw)
 {
 	int base = param->min_u;
@@ -607,7 +607,7 @@ static const struct smb_buck_boost_freq chg_freq_list[] = {
 	},
 };
 
-int smblib_set_chg_freq(struct smb_mmi_chg_param *param,
+static int smblib_set_chg_freq(struct smb_mmi_chg_param *param,
 				int val_u, u8 *val_raw)
 {
 	u8 i;
@@ -767,7 +767,7 @@ static const char * const smb_mmi_ext_iio_chan_name[] = {
 	[SMB5_QG_SOH] = "soh",
 };
 
-bool is_chan_valid(struct smb_mmi_charger *chip,
+static bool is_chan_valid(struct smb_mmi_charger *chip,
 		enum smb_mmi_ext_iio_channels chan)
 {
 	int rc;
@@ -1316,7 +1316,7 @@ static DEVICE_ATTR(force_chg_auto_enable, 0664,
 		force_chg_auto_enable_show,
 		force_chg_auto_enable_store);
 
-int smblib_set_charge_param(struct smb_mmi_charger *chg,
+static int smblib_set_charge_param(struct smb_mmi_charger *chg,
 			    struct smb_mmi_chg_param *param, int val_u)
 {
 	int rc = 0;
@@ -1352,7 +1352,7 @@ int smblib_set_charge_param(struct smb_mmi_charger *chg,
 	return rc;
 }
 
-int smblib_get_charge_param(struct smb_mmi_charger *chg,
+static int smblib_get_charge_param(struct smb_mmi_charger *chg,
 			    struct smb_mmi_chg_param *param, int *val_u)
 {
 	int rc = 0;
