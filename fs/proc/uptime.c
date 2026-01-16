@@ -6,6 +6,7 @@
 #include <linux/seq_file.h>
 #include <linux/time.h>
 #include <linux/kernel_stat.h>
+#include "internal.h"
 
 static int uptime_proc_show(struct seq_file *m, void *v)
 {
@@ -32,7 +33,10 @@ static int uptime_proc_show(struct seq_file *m, void *v)
 
 static int __init proc_uptime_init(void)
 {
-	proc_create_single("uptime", 0, NULL, uptime_proc_show);
+	struct proc_dir_entry *pde;
+
+	pde = proc_create_single("uptime", 0, NULL, uptime_proc_show);
+	pde_make_permanent(pde);
 	return 0;
 }
 fs_initcall(proc_uptime_init);
