@@ -103,7 +103,7 @@ static ssize_t mmi_annotate_write(struct file *file, const char __user *buf,
 	return count;
 }
 
-#if KERNEL_VERSION(5, 10, 0) <= LINUX_VERSION_CODE
+#if KERNEL_VERSION(5, 4, 0) <= LINUX_VERSION_CODE
 static const struct proc_ops mmi_annotate_operations = {
 	.proc_open		= mmi_annotate_open,
 	.proc_read		= seq_read,

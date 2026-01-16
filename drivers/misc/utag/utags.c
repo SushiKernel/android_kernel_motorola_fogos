@@ -272,7 +272,7 @@ static int add_utag_tail(struct utag *head, char *utag_name, char *utag_type);
 static int lock_open(struct inode *inode, struct file *file);
 static int partition_open(struct inode *inode, struct file *file);
 
-#if KERNEL_VERSION(5, 10, 0) <= LINUX_VERSION_CODE
+#if KERNEL_VERSION(5, 4, 0) <= LINUX_VERSION_CODE
 static const struct proc_ops utag_fops = {
 	.proc_open = partition_open,
 	.proc_read = seq_read,
@@ -730,7 +730,7 @@ static struct utag *find_first_utag(const struct utag *head, const char *name)
 
 static int proc_utag_file(char *utag_name, char *utag_type,
 	  enum utag_output mode, struct dir_node *dnode,
-#if KERNEL_VERSION(5, 10, 0) <= LINUX_VERSION_CODE
+#if KERNEL_VERSION(5, 4, 0) <= LINUX_VERSION_CODE
 	  const struct proc_ops *fops)
 #else
 	  const struct file_operations *fops)
@@ -1867,7 +1867,7 @@ static int partition_open(struct inode *inode, struct file *file)
 	return single_open(file, read_utag, PDE_DATA(inode));
 }
 
-#if KERNEL_VERSION(5, 10, 0) <= LINUX_VERSION_CODE
+#if KERNEL_VERSION(5, 4, 0) <= LINUX_VERSION_CODE
 static const struct proc_ops reload_fops = {
 	.proc_open = reload_open,
 	.proc_read = seq_read,

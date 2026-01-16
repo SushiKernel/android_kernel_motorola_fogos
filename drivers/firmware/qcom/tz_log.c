@@ -1233,10 +1233,9 @@ static ssize_t tzdbgfs_read(struct file *file, char __user *buf,
 		return tzdbgfs_read_encrypted(file, buf, count, offp);
 }
 
-static const struct file_operations tzdbg_fops = {
-	.owner   = THIS_MODULE,
-	.read    = tzdbgfs_read,
-	.open    = simple_open,
+static const struct proc_ops tzdbg_fops = {
+	.proc_read = tzdbgfs_read,
+	.proc_open = simple_open,
 };
 
 /*

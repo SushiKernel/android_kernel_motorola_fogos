@@ -291,7 +291,7 @@ static int bootinfo_proc_open(struct inode *inode, struct file *file)
 	return single_open(file, get_bootinfo, PDE_DATA(inode));
 }
 
-#if KERNEL_VERSION(5, 10, 0) <= LINUX_VERSION_CODE
+#if KERNEL_VERSION(5, 4, 0) <= LINUX_VERSION_CODE
 static const struct proc_ops bootinfo_proc_fops = {
 	.proc_open           = bootinfo_proc_open,
 	.proc_read           = seq_read,

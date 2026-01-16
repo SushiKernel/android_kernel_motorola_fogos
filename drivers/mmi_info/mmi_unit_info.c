@@ -168,7 +168,7 @@ static int unitinfo_open(struct inode *inode, struct file *file)
 	return single_open(file, unitinfo_seq_show, inode->i_private);
 }
 
-#if KERNEL_VERSION(5, 10, 0) <= LINUX_VERSION_CODE
+#if KERNEL_VERSION(5, 4, 0) <= LINUX_VERSION_CODE
 static const struct proc_ops unitinfo_operations = {
 	.proc_open		= unitinfo_open,
 	.proc_read		= seq_read,

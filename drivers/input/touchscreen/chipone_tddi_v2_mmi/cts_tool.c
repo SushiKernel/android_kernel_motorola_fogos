@@ -1171,7 +1171,7 @@ static long cts_tool_ioctl(struct file *file, unsigned int cmd,
     return -ENOTSUPP;
 }
 
-#if LINUX_VERSION_CODE < KERNEL_VERSION(5, 6, 0)
+#if LINUX_VERSION_CODE < KERNEL_VERSION(5, 4, 0)
 static struct file_operations cts_tool_fops = {
     .owner = THIS_MODULE,
     .llseek = no_llseek,

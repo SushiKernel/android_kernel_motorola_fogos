@@ -986,7 +986,7 @@ static int32_t selftest_proc_open(struct inode *inode, struct file *file)
     return 0;
 }
 
-#if LINUX_VERSION_CODE < KERNEL_VERSION(5, 6, 0)
+#if LINUX_VERSION_CODE < KERNEL_VERSION(5, 4, 0)
 static const struct file_operations selftest_proc_fops = {
     .owner   = THIS_MODULE,
     .open    = selftest_proc_open,
@@ -1041,7 +1041,7 @@ static int cts_rawdata_open(struct inode *inode, struct file *file)
     return single_open(file, cts_rawdata_show, PDE_DATA(inode));
 }
 
-#if LINUX_VERSION_CODE < KERNEL_VERSION(5, 6, 0)
+#if LINUX_VERSION_CODE < KERNEL_VERSION(5, 4, 0)
 static const struct file_operations cts_rawdata_ops = {
     .owner = THIS_MODULE,
     .open = cts_rawdata_open,
@@ -1092,7 +1092,7 @@ static int cts_diffdata_open(struct inode *inode, struct file *file)
     return single_open(file, cts_diffdata_show, PDE_DATA(inode));
 }
 
-#if LINUX_VERSION_CODE < KERNEL_VERSION(5, 6, 0)
+#if LINUX_VERSION_CODE < KERNEL_VERSION(5, 4, 0)
 static const struct file_operations cts_diffdata_ops = {
     .owner = THIS_MODULE,
     .open = cts_diffdata_open,
@@ -1143,7 +1143,7 @@ static int cts_manual_open(struct inode *inode, struct file *file)
     return single_open(file, cts_manual_show, PDE_DATA(inode));
 }
 
-#if LINUX_VERSION_CODE < KERNEL_VERSION(5, 6, 0)
+#if LINUX_VERSION_CODE < KERNEL_VERSION(5, 4, 0)
 static const struct file_operations cts_manual_ops = {
     .owner = THIS_MODULE,
     .open = cts_manual_open,
@@ -1228,7 +1228,7 @@ static int cts_limit_open(struct inode *inode, struct file *file)
     return single_open(file, cts_limit_show, PDE_DATA(inode));
 }
 
-#if LINUX_VERSION_CODE < KERNEL_VERSION(5, 6, 0)
+#if LINUX_VERSION_CODE < KERNEL_VERSION(5, 4, 0)
 static const struct file_operations cts_limit_ops = {
     .owner = THIS_MODULE,
     .open = cts_limit_open,
@@ -1553,7 +1553,7 @@ static int cts_factory_test_open(struct inode *inode, struct file *file)
     return single_open(file, cts_factory_test_show, PDE_DATA(inode));
 }
 
-#if LINUX_VERSION_CODE < KERNEL_VERSION(5, 6, 0)
+#if LINUX_VERSION_CODE < KERNEL_VERSION(5, 4, 0)
 static const struct file_operations cts_factory_test_ops = {
     .owner = THIS_MODULE,
     .open = cts_factory_test_open,
