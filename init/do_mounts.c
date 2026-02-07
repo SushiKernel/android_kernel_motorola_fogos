@@ -401,7 +401,7 @@ static int __init do_mount_root(char *name, char *fs, int flags, void *data)
 		strscpy(data_page, data, PAGE_SIZE);
 	}
 
-	ret = ksys_mount(name, "/root", fs, flags, data_page);
+	ret = do_mount(name, "/root", fs, flags, data_page);
 	if (ret)
 		goto out;
 
@@ -641,7 +641,7 @@ void __init prepare_namespace(void)
 	mount_root();
 out:
 	devtmpfs_mount();
-	ksys_mount(".", "/", NULL, MS_MOVE, NULL);
+	do_mount(".", "/", NULL, MS_MOVE, NULL);
 	ksys_chroot(".");
 }
 
