@@ -23,6 +23,16 @@
 #define __LOAD_RCPC(sfx, regs...)	"ldar" #sfx "\t" #regs
 #endif /* CONFIG_AS_HAS_LDAPR */
 
+#if CONFIG_CLANG_VERSION >= 230000
+#define __rwonce_typeof_unqual(x) __typeof_unqual__(x)
+#else
+#define __rwonce_typeof_unqual(x) typeof(({				\
+	__diag_push()							\
+	__diag_ignore_all("-Wignored-qualifiers", "")			\
+	((typeof(x)(*)(void))0)();					\
+	__diag_pop() }))
+#endif
+
 /*
  * When building with LTO, there is an increased risk of the compiler
  * converting an address dependency headed by a READ_ONCE() invocation
@@ -36,8 +46,7 @@
 #define __READ_ONCE(x)							\
 ({									\
 	typeof(&(x)) __x = &(x);					\
-	int atomic = 1;							\
-	union { __unqual_scalar_typeof(*__x) __val; char __c[1]; } __u;	\
+	union { __rwonce_typeof_unqual(*__x) __val; char __c[1]; } __u;	\
 	switch (sizeof(x)) {						\
 	case 1:								\
 		asm volatile(__LOAD_RCPC(b, %w0, %1)			\
@@ -60,9 +69,9 @@
 			: "Q" (*__x) : "memory");			\
 		break;							\
 	default:							\
-		atomic = 0;						\
+		__u.__val = *(volatile typeof(*__x) *)__x;		\
 	}								\
-	atomic ? (typeof(*__x))__u.__val : (*(volatile typeof(*__x) *)__x);\
+	__u.__val;							\
 })
 
 #endif	/* !BUILD_VDSO */
