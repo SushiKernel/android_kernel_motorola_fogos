@@ -10628,7 +10628,7 @@ more_balance:
 
 			if (is_reserved(this_cpu) ||
 				is_reserved(cpu_of(busiest))) {
-				raw_spin_unlock_irqrestore(&busiest->lock, flags);
+				raw_spin_rq_unlock_irqrestore(busiest, flags);
 				*continue_balancing = 0;
 				goto out;
 			}
