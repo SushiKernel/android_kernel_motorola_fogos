@@ -58,6 +58,7 @@
 #include <linux/prefetch.h>
 #include <linux/profile.h>
 #include <linux/psi.h>
+#include <linux/rbtree_augmented.h>
 #include <linux/rcupdate_wait.h>
 #include <linux/security.h>
 #include <linux/stop_machine.h>
@@ -3233,6 +3234,7 @@ static inline void update_current_exec_runtime(struct task_struct *curr,
 }
 
 extern u64 avg_vruntime(struct cfs_rq *cfs_rq);
+extern int entity_eligible(struct cfs_rq *cfs_rq, struct sched_entity *se);
 
 #ifdef CONFIG_SPRD_ROTATION_TASK
 DECLARE_PER_CPU_SHARED_ALIGNED(bool, cpu_reserved);
