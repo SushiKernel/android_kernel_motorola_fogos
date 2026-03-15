@@ -3668,9 +3668,6 @@ out:
 
 bool cpus_equal_capacity(int this_cpu, int that_cpu)
 {
-	if (!sched_asym_cpucap_active())
-		return true;
-
 	if (this_cpu == that_cpu)
 		return true;
 

@@ -124,9 +124,6 @@ int cpudl_find(struct cpudl *cp, struct task_struct *p,
 		unsigned long cap, max_cap = 0;
 		int cpu, max_cpu = -1;
 
-		if (!sched_asym_cpucap_active())
-			return 1;
-
 		/* Ensure the capacity of the CPUs fits the task. */
 		for_each_cpu(cpu, later_mask) {
 			if (!dl_task_fits_capacity(p, cpu)) {

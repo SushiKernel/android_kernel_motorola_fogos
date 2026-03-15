@@ -144,8 +144,7 @@ static inline unsigned long __dl_bw_capacity(const struct cpumask *mask)
  */
 static inline unsigned long dl_bw_capacity(int i)
 {
-	if (!sched_asym_cpucap_active() &&
-	    capacity_orig_of(i) == SCHED_CAPACITY_SCALE) {
+	if (capacity_orig_of(i) == SCHED_CAPACITY_SCALE) {
 		return dl_bw_cpus(i) << SCHED_CAPACITY_SHIFT;
 	} else {
 		RCU_LOCKDEP_WARN(!rcu_read_lock_sched_held(),
@@ -1850,8 +1849,7 @@ select_task_rq_dl(struct task_struct *p, int cpu, int flags)
 	 * Take the capacity of the CPU into account to
 	 * ensure it fits the requirement of the task.
 	 */
-	if (sched_asym_cpucap_active())
-		select_rq |= !dl_task_fits_capacity(p, cpu);
+	select_rq |= !dl_task_fits_capacity(p, cpu);
 
 	if (select_rq) {
 		int target = find_later_rq(p);
