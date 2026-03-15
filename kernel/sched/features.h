@@ -24,7 +24,7 @@ SCHED_FEAT(RUN_TO_PARITY, true)
  */
 SCHED_FEAT(PREEMPT_SHORT, true)
 
-SCHED_FEAT(ENFORCE_ELIGIBILITY, true)
+SCHED_FEAT(ENFORCE_ELIGIBILITY, false)
 
 /*
  * Prefer to schedule the task we woke last (assuming it failed
