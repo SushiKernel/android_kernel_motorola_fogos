@@ -1724,7 +1724,7 @@ int path_umount(struct path *path, int flags)
 	return ret;
 }
 
-int ksys_umount(char __user *name, int flags)
+static int ksys_umount(char __user *name, int flags)
 {
 	int lookup_flags = LOOKUP_MOUNTPOINT;
 	struct path path;
