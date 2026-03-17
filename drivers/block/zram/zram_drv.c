@@ -1591,7 +1591,7 @@ static int zram_read_from_zspool(struct zram *zram, struct page *page,
 	src = zs_map_object(zram->mem_pool, handle, ZS_MM_RO);
 	if (size == PAGE_SIZE) {
 		dst = kmap_local_page(page);
-		memcpy(dst, src, PAGE_SIZE);
+		copy_page(dst, src);
 		kunmap_local(dst);
 		ret = 0;
 	} else {
@@ -1698,7 +1698,7 @@ static int write_incompressible_page(struct zram *zram, struct page *page,
 
 	dst = zs_map_object(zram->mem_pool, handle, ZS_MM_WO);
 	src = kmap_local_page(page);
-	memcpy(dst, src, PAGE_SIZE);
+	copy_page(dst, src);
 	kunmap_local(src);
 	zs_unmap_object(zram->mem_pool, handle);
 
