@@ -2040,3 +2040,11 @@ config MOT_SECURE_CAMERA
 config MOT_USB_DEBUG_LOG
 	bool "For usb debug log in factiry SW"
 	default n
+
+config OPTIMIZE_FOR_A55
+    bool "Optimize for Cortex-A55"
+	default n
+
+config OPTIMIZE_FOR_A76
+    bool "Optimize for Cortex-A76"
+    default n

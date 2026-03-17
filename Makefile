@@ -765,6 +765,13 @@ KBUILD_CFLAGS	+= $(call cc-disable-warning, format-truncation)
 KBUILD_CFLAGS	+= $(call cc-disable-warning, format-overflow)
 KBUILD_CFLAGS	+= $(call cc-disable-warning, address-of-packed-member)
 
+KBUILD_CFLAGS += -march=armv8.2-a+crc+crypto+lse+rdm+rcpc+dotprod
+ifdef CONFIG_OPTIMIZE_FOR_A55
+KBUILD_CFLAGS += -mcpu=cortex-a55
+else ifdef CONFIG_OPTIMIZE_FOR_A76
+KBUILD_CFLAGS += -mcpu=cortex-a76
+endif
+
 ifdef CONFIG_CC_OPTIMIZE_FOR_PERFORMANCE
 KBUILD_CFLAGS += -O2
 else ifdef CONFIG_CC_OPTIMIZE_FOR_PERFORMANCE_O3
