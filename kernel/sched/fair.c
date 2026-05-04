@@ -6527,14 +6527,6 @@ enqueue_task_fair(struct rq *rq, struct task_struct *p, int flags)
 		return;
 	}
 
-	/*
-	 * If in_iowait is set, the code below may not trigger any cpufreq
-	 * utilization updates, so do it here explicitly with the IOWAIT flag
-	 * passed.
-	 */
-	if (p->in_iowait)
-		cpufreq_update_util(rq, SCHED_CPUFREQ_IOWAIT);
-
 	if (task_new && se->sched_delayed)
 		h_nr_runnable = 0;
 
