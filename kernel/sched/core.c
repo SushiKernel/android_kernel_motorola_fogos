@@ -1564,7 +1564,7 @@ static inline void uclamp_rq_bucket_update(struct rq *rq, struct task_struct *p,
 	    bucket_value != uc_se->value || uc_se->value == 0)
 		return;
 
-	bucket_value = UCLAMP_BUCKET_DELTA * uclamp_bucket_id(uc_se->value);
+	bucket_value = uclamp_bucket_base_value(uc_se->value);
 	/* search for all cfs tasks */
 	list_for_each_entry(t, &rq->cfs_tasks, se.group_node) {
 		struct uclamp_se *uc_se_t = &t->uclamp[clamp_id];
@@ -2041,9 +2041,6 @@ static inline void enqueue_task(struct rq *rq, struct task_struct *p, int flags)
 	if (!(flags & ENQUEUE_NOCLOCK))
 		update_rq_clock(rq);
 
-#ifdef CONFIG_SPRD_ROTATION_TASK
-	p->last_enqueue_ts = sched_ktime_clock();
-#endif
 	/*
 	 * Can be before ->enqueue_task() because uclamp considers the
 	 * ENQUEUE_DELAYED task before its ->sched_delayed gets cleared
@@ -3081,7 +3078,7 @@ void set_task_cpu(struct task_struct *p, unsigned int new_cpu)
 	__set_task_cpu(p, new_cpu);
 }
 
-#if defined(CONFIG_NUMA_BALANCING) || defined(CONFIG_SPRD_ROTATION_TASK)
+#ifdef CONFIG_NUMA_BALANCING
 static void __migrate_swap_task(struct task_struct *p, int cpu)
 {
 	if (task_on_rq_queued(p)) {
@@ -3196,7 +3193,7 @@ int migrate_swap(struct task_struct *cur, struct task_struct *p,
 out:
 	return ret;
 }
-#endif /* CONFIG_NUMA_BALANCING || CONFIG_SPRD_ROTATION_TASK */
+#endif /* CONFIG_NUMA_BALANCING */
 
 /***
  * kick_process - kick a running thread to enter/exit the kernel
@@ -4493,9 +4490,6 @@ void wake_up_new_task(struct task_struct *p)
 	update_rq_clock(rq);
 	post_init_entity_util_avg(p);
 
-#ifdef CONFIG_SPRD_ROTATION_TASK
-	p->last_enqueue_ts = sched_ktime_clock();
-#endif
 	activate_task(rq, p, ENQUEUE_NOCLOCK);
 	trace_sched_wakeup_new(p);
 	check_preempt_curr(rq, p, wake_flags);
@@ -5199,10 +5193,6 @@ unsigned long long task_sched_runtime(struct task_struct *p)
 	return ns;
 }
 
-#ifdef CONFIG_SPRD_ROTATION_TASK
-static DEFINE_RAW_SPINLOCK(rotation_lock);
-#endif
-
 /*
  * This function gets called by the timer code, with HZ frequency.
  * We call it with interrupts disabled.
@@ -5233,17 +5223,6 @@ void scheduler_tick(void)
 #ifdef CONFIG_SMP
 	rq->idle_balance = idle_cpu(cpu);
 	trigger_load_balance(rq);
-#endif
-
-#ifdef CONFIG_SPRD_ROTATION_TASK
-	if (curr->sched_class == &fair_sched_class) {
-		if (rq->misfit_task_load && READ_ONCE(curr->__state) == TASK_RUNNING &&
-			cpumask_test_cpu(cpu, &min_cap_cpu_mask)) {
-			raw_spin_lock(&rotation_lock);
-			check_for_task_rotation(rq);
-			raw_spin_unlock(&rotation_lock);
-		}
-	}
 #endif
 
 	trace_android_vh_scheduler_tick(rq);
