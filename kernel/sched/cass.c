@@ -159,6 +159,9 @@ static int cass_best_cpu(struct task_struct *p, int prev_cpu, bool sync, bool rt
 		struct cpuidle_state *idle_state;
 		struct rq *rq = cpu_rq(cpu);
 
+		if (is_reserved(cpu))
+			continue;
+
 		/* Initialize early so @best->cpu is never garbage */
 		curr->cpu = cpu;
 
