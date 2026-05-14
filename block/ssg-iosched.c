@@ -718,7 +718,7 @@ static void ssg_insert_requests(struct blk_mq_hw_ctx *hctx,
  * Nothing to do here. This is defined only to ensure that .finish_request
  * method is called upon request completion.
  */
-static void ssg_prepare_request(struct request *rq, struct bio *bio)
+static void ssg_prepare_request(struct request *rq)
 {
 	struct ssg_data *ssg = rq->q->elevator->elevator_data;
 	struct ssg_request_info *rqi;
