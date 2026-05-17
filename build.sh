@@ -9,30 +9,22 @@ catch() {
     exit $1
 }
 
-# Start logging
 exec > build.log 2>&1
 
 export KBUILD_BUILD_USER=nobody
 export KBUILD_BUILD_HOST=android-build
 
 export PATH=${PWD}/toolchain/bin:${PATH}
-export AnyKernel3=AnyKernel3
 export LLVM_DIR=${PWD}/toolchain/bin
 export LLVM=1
-export modpath=${AnyKernel3}/modules/vendor/lib/modules
 
 export ARCH=arm64
 export DEVICE=fogos
+export AnyKernel3=AnyKernel3
 
-if [[ -z "$1" || "$1" = "-c" ]]; then
-    echo "Clean Build"
-    rm -rf out
-elif [ "$1" = "-d" ]; then
-    echo "Dirty Build"
-else
-    echo "Error: Set $1 to -c or -d"
-    exit 1
-fi
+echo "Clean build"
+rm -rf out
+rm -rf ${AnyKernel3}
 
 ARGS="
 ARCH=arm64
@@ -52,30 +44,16 @@ make ${ARGS} O=out fogos_defconfig
 make ${ARGS} O=out -j$(nproc --all)
 
 if [ ! -e out/arch/arm64/boot/Image ]; then
-    echo "❌ ERROR: Image binary not found in expected location, fix compile!"
+    echo "❌ ERROR: Image not found, build failed"
     exit 1
 fi
 
-make O=out ${ARGS} -j$(nproc --all) INSTALL_MOD_PATH=modules INSTALL_MOD_STRIP=1 modules_install
-
-git clone --depth=1 https://github.com/MondayNitro/AnyKernel3 ${AnyKernel3}
-rm -rf ${AnyKernel3}/.github
-mkdir -p ${modpath}
-kver=$(make kernelversion)
-kmod=$(echo ${kver} | awk -F'.' '{print $3}')
+git clone -b fogos --depth=1 https://github.com/MondayNitro/AnyKernel3 ${AnyKernel3}
+rm -rf ${AnyKernel3}/{.git,.github,README.md} ${AnyKernel3}/*placeholder
 
 cp out/.config kernel_config
 cp out/arch/arm64/boot/Image ${AnyKernel3}/Image
 cp out/arch/arm64/boot/dtb.img ${AnyKernel3}/dtb
 cp out/arch/arm64/boot/dtbo.img ${AnyKernel3}/dtbo.img
-cp $(find out/modules/lib/modules/5.4* -name '*.ko') ${modpath}/
-cp out/modules/lib/modules/5.4*/modules.{alias,dep,softdep} ${modpath}/
-cp out/modules/lib/modules/5.4*/modules.order ${modpath}/modules.load
 
-# Fix module paths
-sed -i 's/\(kernel\/[^: ]*\/\)\([^: ]*\.ko\)/\/vendor\/lib\/modules\/\2/g' ${modpath}/modules.dep
-sed -i 's/.*\///; s/\.ko$//' ${modpath}/modules.load
-
-cd ${AnyKernel3}
-zip -r9 build.zip * -x .git README.md *placeholder config
-echo "✅ Build completed successfully!"
+echo "✅ Clean build completed successfully!"
