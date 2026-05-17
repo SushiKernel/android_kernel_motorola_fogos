@@ -26,6 +26,8 @@ echo "Clean build"
 rm -rf out
 rm -rf ${AnyKernel3}
 
+curl -LSs https://raw.githubusercontent.com/MondayNitro/KernelSU/master/kernel/setup.sh | bash -s master
+
 ARGS="
 ARCH=arm64
 CC=clang
