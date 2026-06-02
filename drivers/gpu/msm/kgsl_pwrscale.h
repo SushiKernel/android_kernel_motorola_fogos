@@ -72,6 +72,8 @@ struct kgsl_pwrscale {
 	 * ddr stall
 	 */
 	bool avoid_ddr_stall;
+	/** @bus_devfreq: Pointer to the bus devfreq device */
+	struct devfreq *bus_devfreq;
 };
 
 /**
