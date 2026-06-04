@@ -35,6 +35,7 @@
 #include <linux/completion.h>
 #include <linux/workqueue.h>
 #include <linux/slab.h>
+#include <linux/oom.h>
 #include <linux/cpu.h>
 #include <linux/notifier.h>
 #include <linux/kthread.h>
@@ -5568,6 +5569,9 @@ static int alloc_and_link_pwqs(struct workqueue_struct *wq)
 	wq->cpu_pwq = alloc_percpu(struct pool_workqueue *);
 	if (!wq->cpu_pwq)
 		goto enomem;
+
+	if (task_is_critical())
+		highpri = true;
 
 	if (!(wq->flags & WQ_UNBOUND)) {
 		for_each_possible_cpu(cpu) {
