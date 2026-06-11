@@ -978,6 +978,7 @@ endif
 ifdef CONFIG_LTO_CLANG
 ifdef CONFIG_THINLTO
 CC_FLAGS_LTO_CLANG := -flto=thin $(call cc-option, -fsplit-lto-unit)
+KBUILD_LDFLAGS += $(call ld-option,--lto-whole-program-visibility -mllvm -always-rename-promoted-locals=false)
 else
 CC_FLAGS_LTO_CLANG := -flto
 endif
