@@ -178,18 +178,20 @@ static void update_counts(struct memlat_cpu_grp *cpu_grp)
 	for_each_cpu(cpu, &cpu_grp->cpus) {
 		struct cpu_data *cpu_data = to_cpu_data(cpu_grp, cpu);
 		struct event_data *common_evs = cpu_data->common_evs;
+		unsigned long cyc_cnt, stall_cnt;
 
 		for (i = 0; i < NUM_COMMON_EVS; i++)
 			read_event(&common_evs[i]);
 
-		if (!common_evs[STALL_IDX].pevent)
-			common_evs[STALL_IDX].last_delta =
-				common_evs[CYC_IDX].last_delta;
-
-		cpu_data->freq = common_evs[CYC_IDX].last_delta / delta;
-		cpu_data->stall_pct = mult_frac(100,
-				common_evs[STALL_IDX].last_delta,
-				common_evs[CYC_IDX].last_delta);
+		cyc_cnt = common_evs[CYC_IDX].last_delta;
+		cpu_data->freq = delta ? cyc_cnt / delta : cyc_cnt;
+		if (common_evs[STALL_IDX].pevent) {
+			stall_cnt = common_evs[STALL_IDX].last_delta;
+			stall_cnt = min(stall_cnt, cyc_cnt);
+			cpu_data->stall_pct = mult_frac(100, stall_cnt, cyc_cnt);
+		} else {
+			cpu_data->stall_pct = 100;
+		}
 	}
 
 	for (i = 0; i < cpu_grp->num_mons; i++) {
