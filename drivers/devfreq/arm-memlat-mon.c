@@ -224,15 +224,16 @@ static unsigned long get_cnt(struct memlat_hwmon *hw)
 		devstats->freq = cpu_data->freq;
 		devstats->stall_pct = cpu_data->stall_pct;
 
-		if (mon->miss_ev) {
-			devstats->inst_count =
-				common_evs[INST_IDX].last_delta;
+		/* Other data is not required for 'compute' */
+		if (!mon->miss_ev)
+			continue;
+
+		devstats->inst_count = common_evs[INST_IDX].last_delta;
+		if (mon->miss_ev[mon_idx].pevent)
 			devstats->mem_count =
 				mon->miss_ev[mon_idx].last_delta;
-		} else {
-			devstats->inst_count = 0;
+		else
 			devstats->mem_count = 1;
-		}
 	}
 
 	return 0;
