@@ -1082,6 +1082,7 @@ int f2fs_truncate_inode_blocks(struct inode *inode, pgoff_t from)
 					from, ADDRS_PER_INODE(inode));
 			set_sbi_flag(sbi, SBI_NEED_FSCK);
 		}
+		trace_f2fs_truncate_inode_blocks_exit(inode, level);
 		return level;
 	}
 
