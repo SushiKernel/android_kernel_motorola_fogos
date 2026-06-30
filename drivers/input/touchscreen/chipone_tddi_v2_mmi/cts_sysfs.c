@@ -1185,6 +1185,7 @@ static const struct attribute_group cts_dev_flash_attr_group = {
     .attrs = cts_dev_flash_attrs,
 };
 
+#ifdef CONFIG_TOUCHSCREEN_CHIPONE_V2_MMI_TOOLKIT
 static ssize_t open_test_show(struct device *dev,
         struct device_attribute *attr, char *buf)
 {
@@ -1679,6 +1680,7 @@ static const struct attribute_group cts_dev_test_attr_group = {
     .name = "test",
     .attrs = cts_dev_test_atts,
 };
+#endif /* CONFIG_TOUCHSCREEN_CHIPONE_V2_MMI_TOOLKIT */
 
 static ssize_t ic_type_show(struct device *dev,
         struct device_attribute *attr, char *buf)
@@ -3029,7 +3031,9 @@ static const struct attribute_group *cts_dev_attr_groups[] = {
     &cts_dev_fw_up_attr_group,
 #endif
     &cts_dev_flash_attr_group,
+#ifdef CONFIG_TOUCHSCREEN_CHIPONE_V2_MMI_TOOLKIT
     &cts_dev_test_attr_group,
+#endif
     &cts_dev_misc_attr_group,
     NULL
 };

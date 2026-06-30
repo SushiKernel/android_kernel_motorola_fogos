@@ -802,9 +802,11 @@ static int cts_driver_probe(struct spi_device *client)
 
     cts_init_esd_protection(cts_data);
 
-    ret = cts_tool_init(cts_data);
+#ifdef CONFIG_TOUCHSCREEN_CHIPONE_V2_MMI_TOOLKIT
+	ret = cts_tool_init(cts_data);
     if (ret < 0)
         cts_warn("Init tool node failed %d", ret);
+#endif
 
     ret = cts_sysfs_add_device(&client->dev);
     if (ret < 0)
@@ -839,11 +841,13 @@ static int cts_driver_probe(struct spi_device *client)
     }
 #endif
 
-    ret = cts_oem_init(cts_data);
+#ifdef CONFIG_TOUCHSCREEN_CHIPONE_V2_MMI_TOOLKIT
+	ret = cts_oem_init(cts_data);
     if (ret < 0) {
         cts_warn("Init oem specific faild %d", ret);
         goto err_deinit_oem;
     }
+#endif
 
 #ifdef CFG_CTS_HEARTBEAT_MECHANISM
     INIT_DELAYED_WORK(&cts_data->heart_work, cts_heartbeat_mechanism_work);
@@ -874,8 +878,10 @@ static int cts_driver_probe(struct spi_device *client)
 
     return 0;
 
+#ifdef CONFIG_TOUCHSCREEN_CHIPONE_V2_MMI_TOOLKIT
 err_deinit_oem:
     cts_oem_deinit(cts_data);
+#endif
 
 #ifdef CONFIG_CTS_EARJACK_DETECT
     cts_earjack_detect_deinit(cts_data);
@@ -891,7 +897,7 @@ err_register_fb:
 err_deinit_sysfs:
 #endif
     cts_sysfs_remove_device(&client->dev);
-#ifdef CONFIG_CTS_LEGACY_TOOL
+#if defined(CONFIG_TOUCHSCREEN_CHIPONE_V2_MMI_TOOLKIT) && defined(CONFIG_CTS_LEGACY_TOOL)
     cts_tool_deinit(cts_data);
 #endif
 
@@ -971,7 +977,9 @@ static int cts_driver_remove(struct spi_device *client)
         cts_deinit_pm_fb_notifier(cts_data);
 #endif
 
-        cts_tool_deinit(cts_data);
+#ifdef CONFIG_TOUCHSCREEN_CHIPONE_V2_MMI_TOOLKIT
+		cts_tool_deinit(cts_data);
+#endif
 
         cts_sysfs_remove_device(&client->dev);
 
@@ -985,7 +993,9 @@ static int cts_driver_remove(struct spi_device *client)
 
         cts_plat_free_resource(cts_data->pdata);
 
-        cts_oem_deinit(cts_data);
+#ifdef CONFIG_TOUCHSCREEN_CHIPONE_V2_MMI_TOOLKIT
+		cts_oem_deinit(cts_data);
+#endif
 
 #ifdef CFG_CTS_HEARTBEAT_MECHANISM
         if (cts_data->heart_workqueue)

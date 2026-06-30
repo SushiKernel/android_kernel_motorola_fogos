@@ -60,3 +60,12 @@ config TOUCHSCREEN_CHIPONE_V2_MMI_CHECK_DEVICE_BOOTMODE
 	  Say Y here if you want to have device boot mode check support.
 
 	  If unsure, say N.
+
+config TOUCHSCREEN_CHIPONE_V2_MMI_TOOLKIT
+	bool "Diagnostics and factory test support"
+	depends on TOUCHSCREEN_CHIPONE_V2_MMI
+	default n
+	help
+	  Say Y here if you need diagnostics and factory test support.
+
+	  If unsure, say N.
