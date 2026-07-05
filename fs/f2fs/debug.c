@@ -166,6 +166,7 @@ static void update_general_status(struct f2fs_sb_info *sbi)
 	si->util_invalid = 50 - si->util_free - si->util_valid;
 	for (i = CURSEG_HOT_DATA; i <= CURSEG_COLD_NODE; i++) {
 		struct curseg_info *curseg = CURSEG_I(sbi, i);
+
 		si->curseg[i] = curseg->segno;
 		si->cursec[i] = GET_SEC_FROM_SEG(sbi, curseg->segno);
 		si->curzone[i] = GET_ZONE_FROM_SEC(sbi, si->cursec[i]);
@@ -273,10 +274,12 @@ get_cache:
 	si->page_mem = 0;
 	if (sbi->node_inode) {
 		unsigned npages = NODE_MAPPING(sbi)->nrpages;
+
 		si->page_mem += (unsigned long long)npages << PAGE_SHIFT;
 	}
 	if (sbi->meta_inode) {
 		unsigned npages = META_MAPPING(sbi)->nrpages;
+
 		si->page_mem += (unsigned long long)npages << PAGE_SHIFT;
 	}
 }
