@@ -865,6 +865,9 @@ struct task_struct {
 	unsigned			in_memstall:1;
 #endif
 
+	/* Save user-dumpable when mm goes away. */
+	unsigned			user_dumpable:1;
+
 	unsigned long			atomic_flags; /* Flags requiring atomic access. */
 
 	struct restart_block		restart_block;
