@@ -1847,7 +1847,7 @@ static int f2fs_xattr_fiemap(struct inode *inode,
 			flags |= FIEMAP_EXTENT_LAST;
 
 		err = fiemap_fill_next_extent(fieinfo, 0, phys, len, flags);
-		if (err || err == 1)
+		if (err)
 			return err;
 	}
 
