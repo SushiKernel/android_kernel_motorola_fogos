@@ -667,9 +667,6 @@ static int cts_ioctl_test(struct cts_device *cts_dev,
         bool dump_test_data_to_user = false;
         bool dump_test_data_to_file = false;
         bool dump_test_data_to_file_append = false;
-        bool driver_log_to_user = false;
-        bool driver_log_to_file = false;
-        bool driver_log_to_file_append = false;
         u32 __user *user_min_threshold = NULL;
         u32 __user *user_max_threshold = NULL;
         u32 __user *user_invalid_nodes = NULL;
@@ -677,13 +674,9 @@ static int cts_ioctl_test(struct cts_device *cts_dev,
         void __user *user_test_data = NULL;
         int  __user *user_test_data_wr_size = NULL;
         const char __user *user_test_data_filepath = NULL;
-        void __user *user_driver_log_buf = NULL;
-        int  __user *user_driver_log_wr_size = NULL;
-        const char __user *user_driver_log_filepath = NULL;
         void __user *user_priv_param = NULL;
         int test_result = 0;
         int test_data_wr_size = 0;
-        int driver_log_wr_size = 0;
 
         cts_info("ioctl test item %d: %d(%s) flags: %08x priv param size: %d",
             i, tests[i].test_item, cts_test_item_str(tests[i].test_item),
@@ -709,12 +702,6 @@ static int cts_ioctl_test(struct cts_device *cts_dev,
             !!(tests[i].flags & CTS_TEST_FLAG_DUMP_TEST_DATA_TO_FILE);
         dump_test_data_to_file_append =
             !!(tests[i].flags & CTS_TEST_FLAG_DUMP_TEST_DATA_TO_FILE_APPEND);
-        driver_log_to_user =
-            !!(tests[i].flags & CTS_TEST_FLAG_DRIVER_LOG_TO_USERSPACE);
-        driver_log_to_file =
-            !!(tests[i].flags & CTS_TEST_FLAG_DRIVER_LOG_TO_FILE);
-        driver_log_to_file_append =
-            !!(tests[i].flags & CTS_TEST_FLAG_DRIVER_LOG_TO_FILE_APPEND);
 
         if (tests[i].test_result == NULL) {
             cts_err("Result pointer = NULL");
@@ -803,39 +790,6 @@ static int cts_ioctl_test(struct cts_device *cts_dev,
             }
         }
 
-        if (driver_log_to_user) {
-            cts_info("  - Flag: Dump driver log to user, size: %d",
-                tests[i].driver_log_buf_size);
-
-            if (tests[i].driver_log_buf == NULL) {
-                cts_err("Driver log buf pointer = NULL");
-                ret = -EINVAL;
-                goto store_result;
-            }
-            if (tests[i].driver_log_wr_size == NULL) {
-                cts_err("Driver log write size pointer = NULL");
-                ret = -EINVAL;
-                goto store_result;
-            }
-            if (tests[i].driver_log_buf_size < 1024) {
-                cts_err("Driver log buf size %d too small < 1024",
-                    tests[i].test_data_buf_size);
-                ret = -EINVAL;
-                goto store_result;
-            }
-        }
-
-        if (driver_log_to_file) {
-            cts_info("  - Flag: Dump driver log to file %s",
-                driver_log_to_file_append ? "[Append]" : "");
-
-            if (tests[i].driver_log_filepath == NULL) {
-                cts_err("Driver log filepath = NULL");
-                ret = -EINVAL;
-                goto store_result;
-            }
-        }
-
         /*
          * Dump input parameter from user,
          * Aallocate memory for output,
@@ -910,43 +864,6 @@ static int cts_ioctl_test(struct cts_device *cts_dev,
 #endif
         }
 
-        if (driver_log_to_user) {
-            user_driver_log_buf = (void __user *)tests[i].driver_log_buf;
-            tests[i].driver_log_buf = kmalloc(tests[i].driver_log_buf_size, GFP_KERNEL);
-            if (tests[i].driver_log_buf == NULL) {
-                ret = -ENOMEM;
-                cts_err("Alloc driver log mem failed");
-                goto store_result;
-            }
-            user_driver_log_wr_size = (int __user *)tests[i].driver_log_wr_size;
-            tests[i].driver_log_wr_size = &driver_log_wr_size;
-        }
-
-        if (driver_log_to_file) {
-#ifdef CFG_CTS_FOR_GKI
-            cts_info("%s(): strndup_user is forbiddon with GKI Version!", __func__);
-#else
-            user_driver_log_filepath = (const char __user *)tests[i].driver_log_filepath;
-            tests[i].driver_log_filepath = strndup_user(user_driver_log_filepath, PATH_MAX);
-            if (tests[i].driver_log_filepath == NULL) {
-                cts_err("Strdup driver log filepath failed");
-                goto store_result;
-            }
-#endif
-            cts_info("Log driver log to file '%s'", tests[i].driver_log_filepath);
-        }
-
-        if (driver_log_to_file || driver_log_to_user) {
-            ret = cts_start_driver_log_redirect(
-                tests[i].driver_log_filepath, driver_log_to_file_append,
-                tests[i].driver_log_buf, tests[i].driver_log_buf_size,
-                tests[i].driver_log_level);
-            if (ret) {
-                cts_err("Start driver log redirect failed %d", ret);
-                goto store_result;
-            }
-        }
-
         if (tests[i].priv_param_size && tests[i].priv_param) {
             user_priv_param = (void __user *)tests[i].priv_param;
             tests[i].priv_param = memdup_user(user_priv_param, tests[i].priv_param_size);
@@ -1009,23 +926,6 @@ store_result:
             }
         }
 
-        if (driver_log_to_user) {
-            driver_log_wr_size = cts_get_driver_log_redirect_size();
-            if (user_driver_log_buf != NULL && driver_log_wr_size > 0) {
-                cts_info("Copy driver log to user, size: %d", driver_log_wr_size);
-                if (copy_to_user(user_driver_log_buf, tests[i].driver_log_buf,
-                        driver_log_wr_size)) {
-                    cts_err("Copy driver log to user failed");
-                    driver_log_wr_size = 0;
-                    // Skip this error
-                }
-            }
-
-            if (user_driver_log_wr_size != NULL) {
-                put_user(driver_log_wr_size, user_driver_log_wr_size);
-            }
-        }
-
         if (user_test_result != NULL) {
             put_user(ret, user_test_result);
         } else if (tests[i].test_result != NULL) {
@@ -1060,24 +960,6 @@ store_result:
             kfree(tests[i].test_data_filepath);
         }
 
-        if (driver_log_to_user) {
-            if (user_driver_log_buf != NULL &&
-                tests[i].driver_log_buf != NULL) {
-                kfree(tests[i].driver_log_buf);
-            }
-        }
-
-        if (driver_log_to_file) {
-            if (user_driver_log_filepath != NULL &&
-                tests[i].driver_log_filepath != NULL) {
-                kfree(tests[i].driver_log_filepath);
-            }
-        }
-
-        if (driver_log_to_file || driver_log_to_user) {
-            cts_stop_driver_log_redirect();
-        }
-
         if (user_priv_param && tests[i].priv_param) {
             kfree(tests[i].priv_param);
         }
@@ -1091,7 +973,6 @@ store_result:
 
     return ret;
 }
-
 
 static long cts_tool_ioctl(struct file *file, unsigned int cmd,
         unsigned long arg)

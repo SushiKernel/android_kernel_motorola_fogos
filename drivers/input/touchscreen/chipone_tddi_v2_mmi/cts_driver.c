@@ -38,13 +38,9 @@ static void cts_resume_work_func(struct work_struct *work);
 static struct drm_panel *active_panel;
 static int check_dt(struct device_node *np);
 #endif
-bool cts_show_debug_log;
 #ifdef CTS_MTK_GET_PANEL
 static char *active_panel_name;
 #endif
-
-module_param_named(debug_log, cts_show_debug_log, bool, 0660);
-MODULE_PARM_DESC(debug_log, "Show debug log control");
 
 struct chipone_ts_data *g_cts_data;
 

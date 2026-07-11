@@ -50,8 +50,6 @@
 #endif
 #include "cts_core.h"
 
-extern bool cts_show_debug_log;
-
 #ifndef LOG_TAG
 #define LOG_TAG         ""
 #endif /* LOG_TAG */
@@ -67,16 +65,11 @@ extern int cts_start_driver_log_redirect(const char *filepath, bool append_to_fi
         char *log_buffer, int log_buf_size, int log_level);
 extern void cts_stop_driver_log_redirect(void);
 extern int cts_get_driver_log_redirect_size(void);
-extern void cts_log(int level, const char *fmt, ...);
 
-#define cts_err(fmt, ...)   \
-    cts_log(CTS_DRIVER_LOG_ERROR, "<E>CTS-" LOG_TAG " " fmt"\n", ##__VA_ARGS__)
-#define cts_warn(fmt, ...)  \
-    cts_log(CTS_DRIVER_LOG_WARN,  "<W>CTS-" LOG_TAG " " fmt"\n", ##__VA_ARGS__)
-#define cts_info(fmt, ...)  \
-    cts_log(CTS_DRIVER_LOG_INFO,  "<I>CTS-" LOG_TAG " " fmt"\n", ##__VA_ARGS__)
-#define cts_dbg(fmt, ...)   \
-    cts_log(CTS_DRIVER_LOG_DEBUG, "<D>CTS-" LOG_TAG " " fmt"\n", ##__VA_ARGS__)
+#define cts_err(fmt, ...)  do { } while (0)
+#define cts_warn(fmt, ...) do { } while (0)
+#define cts_info(fmt, ...) do { } while (0)
+#define cts_dbg(fmt, ...)  do { } while (0)
 
 
 struct cts_device;
