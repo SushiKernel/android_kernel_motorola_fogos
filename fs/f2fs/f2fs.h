@@ -1180,6 +1180,7 @@ struct f2fs_io_info {
 	unsigned int is_por:1;		/* indicate IO is from recovery or not */
 	unsigned int retry:1;		/* need to reallocate block address */
 	unsigned int encrypted:1;	/* indicate file is encrypted */
+	unsigned int post_read:1;	/* require post read */
 	enum iostat_type io_type;	/* io type */
 	struct writeback_control *io_wbc; /* writeback control */
 	struct bio **bio;		/* bio for ipu */
