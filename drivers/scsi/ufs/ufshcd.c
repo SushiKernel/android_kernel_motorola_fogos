@@ -2809,8 +2809,6 @@ static int ufshcd_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
 		lrbp->cmd = NULL;
 		goto out;
 	}
-	/* Make sure descriptors are ready before ringing the doorbell */
-	wmb();
 
 	spin_lock_irqsave(hba->host->host_lock, flags);
 	switch (hba->ufshcd_state) {
@@ -2964,8 +2962,6 @@ static int ufshcd_wait_for_dev_cmd(struct ufs_hba *hba,
 	time_left = wait_for_completion_timeout(hba->dev_cmd.complete,
 			msecs_to_jiffies(max_timeout));
 
-	/* Make sure descriptors are ready before ringing the doorbell */
-	wmb();
 	spin_lock_irqsave(hba->host->host_lock, flags);
 	hba->dev_cmd.complete = NULL;
 	if (likely(time_left)) {
@@ -3031,8 +3027,7 @@ static int ufshcd_exec_dev_cmd(struct ufs_hba *hba,
 	hba->dev_cmd.complete = &wait;
 
 	ufshcd_add_query_upiu_trace(hba, tag, "query_send");
-	/* Make sure descriptors are ready before ringing the doorbell */
-	wmb();
+
 	spin_lock_irqsave(hba->host->host_lock, flags);
 	ufshcd_send_command(hba, tag);
 	spin_unlock_irqrestore(hba->host->host_lock, flags);
@@ -6585,9 +6580,6 @@ static int __ufshcd_issue_tm_cmd(struct ufs_hba *hba,
 	/* send command to the controller */
 	__set_bit(task_tag, &hba->outstanding_tasks);
 
-	/* Make sure descriptors are ready before ringing the task doorbell */
-	wmb();
-
 	ufshcd_writel(hba, 1 << task_tag, REG_UTP_TASK_REQ_DOOR_BELL);
 	/* Make sure that doorbell is committed immediately */
 	wmb();
@@ -6754,8 +6746,6 @@ static int ufshcd_issue_devman_upiu_cmd(struct ufs_hba *hba,
 
 	hba->dev_cmd.complete = &wait;
 
-	/* Make sure descriptors are ready before ringing the doorbell */
-	wmb();
 	spin_lock_irqsave(hba->host->host_lock, flags);
 	ufshcd_send_command(hba, tag);
 	spin_unlock_irqrestore(hba->host->host_lock, flags);
