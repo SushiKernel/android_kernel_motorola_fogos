@@ -23,7 +23,7 @@
  * Note that @nr may be almost arbitrarily large; this function is not
  * restricted to acting on a single-word quantity.
  */
-static inline void set_bit(long nr, volatile unsigned long *addr)
+static __always_inline void set_bit(long nr, volatile unsigned long *addr)
 {
 	kasan_check_write(addr + BIT_WORD(nr), sizeof(long));
 	arch_set_bit(nr, addr);
@@ -38,7 +38,7 @@ static inline void set_bit(long nr, volatile unsigned long *addr)
  * region of memory concurrently, the effect may be that only one operation
  * succeeds.
  */
-static inline void __set_bit(long nr, volatile unsigned long *addr)
+static __always_inline void __set_bit(long nr, volatile unsigned long *addr)
 {
 	kasan_check_write(addr + BIT_WORD(nr), sizeof(long));
 	arch___set_bit(nr, addr);
@@ -51,7 +51,7 @@ static inline void __set_bit(long nr, volatile unsigned long *addr)
  *
  * This is a relaxed atomic operation (no implied memory barriers).
  */
-static inline void clear_bit(long nr, volatile unsigned long *addr)
+static __always_inline void clear_bit(long nr, volatile unsigned long *addr)
 {
 	kasan_check_write(addr + BIT_WORD(nr), sizeof(long));
 	arch_clear_bit(nr, addr);
@@ -66,7 +66,7 @@ static inline void clear_bit(long nr, volatile unsigned long *addr)
  * region of memory concurrently, the effect may be that only one operation
  * succeeds.
  */
-static inline void __clear_bit(long nr, volatile unsigned long *addr)
+static __always_inline void __clear_bit(long nr, volatile unsigned long *addr)
 {
 	kasan_check_write(addr + BIT_WORD(nr), sizeof(long));
 	arch___clear_bit(nr, addr);
@@ -79,7 +79,7 @@ static inline void __clear_bit(long nr, volatile unsigned long *addr)
  *
  * This operation is atomic and provides release barrier semantics.
  */
-static inline void clear_bit_unlock(long nr, volatile unsigned long *addr)
+static __always_inline void clear_bit_unlock(long nr, volatile unsigned long *addr)
 {
 	kasan_check_write(addr + BIT_WORD(nr), sizeof(long));
 	arch_clear_bit_unlock(nr, addr);
@@ -94,7 +94,7 @@ static inline void clear_bit_unlock(long nr, volatile unsigned long *addr)
  * memory operation. It can be used for an unlock if no other CPUs can
  * concurrently modify other bits in the word.
  */
-static inline void __clear_bit_unlock(long nr, volatile unsigned long *addr)
+static __always_inline void __clear_bit_unlock(long nr, volatile unsigned long *addr)
 {
 	kasan_check_write(addr + BIT_WORD(nr), sizeof(long));
 	arch___clear_bit_unlock(nr, addr);
@@ -110,7 +110,7 @@ static inline void __clear_bit_unlock(long nr, volatile unsigned long *addr)
  * Note that @nr may be almost arbitrarily large; this function is not
  * restricted to acting on a single-word quantity.
  */
-static inline void change_bit(long nr, volatile unsigned long *addr)
+static __always_inline void change_bit(long nr, volatile unsigned long *addr)
 {
 	kasan_check_write(addr + BIT_WORD(nr), sizeof(long));
 	arch_change_bit(nr, addr);
@@ -125,7 +125,7 @@ static inline void change_bit(long nr, volatile unsigned long *addr)
  * region of memory concurrently, the effect may be that only one operation
  * succeeds.
  */
-static inline void __change_bit(long nr, volatile unsigned long *addr)
+static __always_inline void __change_bit(long nr, volatile unsigned long *addr)
 {
 	kasan_check_write(addr + BIT_WORD(nr), sizeof(long));
 	arch___change_bit(nr, addr);
@@ -138,7 +138,7 @@ static inline void __change_bit(long nr, volatile unsigned long *addr)
  *
  * This is an atomic fully-ordered operation (implied full memory barrier).
  */
-static inline bool test_and_set_bit(long nr, volatile unsigned long *addr)
+static __always_inline bool test_and_set_bit(long nr, volatile unsigned long *addr)
 {
 	kasan_check_write(addr + BIT_WORD(nr), sizeof(long));
 	return arch_test_and_set_bit(nr, addr);
@@ -152,7 +152,7 @@ static inline bool test_and_set_bit(long nr, volatile unsigned long *addr)
  * This operation is non-atomic. If two instances of this operation race, one
  * can appear to succeed but actually fail.
  */
-static inline bool __test_and_set_bit(long nr, volatile unsigned long *addr)
+static __always_inline bool __test_and_set_bit(long nr, volatile unsigned long *addr)
 {
 	kasan_check_write(addr + BIT_WORD(nr), sizeof(long));
 	return arch___test_and_set_bit(nr, addr);
@@ -167,7 +167,7 @@ static inline bool __test_and_set_bit(long nr, volatile unsigned long *addr)
  * the returned value is 0.
  * It can be used to implement bit locks.
  */
-static inline bool test_and_set_bit_lock(long nr, volatile unsigned long *addr)
+static __always_inline bool test_and_set_bit_lock(long nr, volatile unsigned long *addr)
 {
 	kasan_check_write(addr + BIT_WORD(nr), sizeof(long));
 	return arch_test_and_set_bit_lock(nr, addr);
@@ -180,7 +180,7 @@ static inline bool test_and_set_bit_lock(long nr, volatile unsigned long *addr)
  *
  * This is an atomic fully-ordered operation (implied full memory barrier).
  */
-static inline bool test_and_clear_bit(long nr, volatile unsigned long *addr)
+static __always_inline bool test_and_clear_bit(long nr, volatile unsigned long *addr)
 {
 	kasan_check_write(addr + BIT_WORD(nr), sizeof(long));
 	return arch_test_and_clear_bit(nr, addr);
@@ -194,7 +194,7 @@ static inline bool test_and_clear_bit(long nr, volatile unsigned long *addr)
  * This operation is non-atomic. If two instances of this operation race, one
  * can appear to succeed but actually fail.
  */
-static inline bool __test_and_clear_bit(long nr, volatile unsigned long *addr)
+static __always_inline bool __test_and_clear_bit(long nr, volatile unsigned long *addr)
 {
 	kasan_check_write(addr + BIT_WORD(nr), sizeof(long));
 	return arch___test_and_clear_bit(nr, addr);
@@ -207,7 +207,7 @@ static inline bool __test_and_clear_bit(long nr, volatile unsigned long *addr)
  *
  * This is an atomic fully-ordered operation (implied full memory barrier).
  */
-static inline bool test_and_change_bit(long nr, volatile unsigned long *addr)
+static __always_inline bool test_and_change_bit(long nr, volatile unsigned long *addr)
 {
 	kasan_check_write(addr + BIT_WORD(nr), sizeof(long));
 	return arch_test_and_change_bit(nr, addr);
@@ -221,7 +221,7 @@ static inline bool test_and_change_bit(long nr, volatile unsigned long *addr)
  * This operation is non-atomic. If two instances of this operation race, one
  * can appear to succeed but actually fail.
  */
-static inline bool __test_and_change_bit(long nr, volatile unsigned long *addr)
+static __always_inline bool __test_and_change_bit(long nr, volatile unsigned long *addr)
 {
 	kasan_check_write(addr + BIT_WORD(nr), sizeof(long));
 	return arch___test_and_change_bit(nr, addr);
@@ -232,7 +232,7 @@ static inline bool __test_and_change_bit(long nr, volatile unsigned long *addr)
  * @nr: bit number to test
  * @addr: Address to start counting from
  */
-static inline bool test_bit(long nr, const volatile unsigned long *addr)
+static __always_inline bool test_bit(long nr, const volatile unsigned long *addr)
 {
 	kasan_check_read(addr + BIT_WORD(nr), sizeof(long));
 	return arch_test_bit(nr, addr);
@@ -250,7 +250,7 @@ static inline bool test_bit(long nr, const volatile unsigned long *addr)
  * This is a bit of a one-trick-pony for the filemap code, which clears
  * PG_locked and tests PG_waiters,
  */
-static inline bool
+static __always_inline bool
 clear_bit_unlock_is_negative_byte(long nr, volatile unsigned long *addr)
 {
 	kasan_check_write(addr + BIT_WORD(nr), sizeof(long));
