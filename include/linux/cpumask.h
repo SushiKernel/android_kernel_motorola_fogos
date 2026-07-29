@@ -206,6 +206,27 @@ static inline unsigned int cpumask_first(const struct cpumask *srcp)
 	return nr > nr_cpumask_bits ? nr_cpumask_bits : nr;
 }
 
+static inline unsigned int cpumask_first_zero(const struct cpumask *srcp)
+{
+	unsigned long bits = *cpumask_bits(srcp);
+	unsigned int nr;
+
+	if (unlikely(bits == ULONG_MAX))
+		return nr_cpumask_bits;
+
+	nr = ffz(bits);
+	return nr > nr_cpumask_bits ? nr_cpumask_bits : nr;
+}
+
+static inline unsigned int cpumask_first_and(const struct cpumask *src1p,
+					     const struct cpumask *src2p)
+{
+	unsigned long bits = *cpumask_bits(src1p) & *cpumask_bits(src2p);
+	unsigned int nr = __builtin_ffsl(bits) - 1;
+
+	return nr > nr_cpumask_bits ? nr_cpumask_bits : nr;
+}
+
 static inline
 unsigned int cpumask_first_and_and(const struct cpumask *srcp1,
 				   const struct cpumask *srcp2,
