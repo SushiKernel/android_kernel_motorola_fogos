@@ -3253,22 +3253,6 @@ static bool allow_direct_reclaim(pg_data_t *pgdat, bool using_kswapd)
 	return wmark_ok;
 }
 
-#define CRITICAL_OOM_SCORE_ADJ	(-900)
-
-static __always_inline bool task_is_critical(void)
-{
-	struct signal_struct *sig;
-	
-	if (current->flags & PF_KTHREAD)
-		return false;
-
-	sig = current->signal;
-	if (unlikely(!sig))
-		return false;
-
-	return READ_ONCE(sig->oom_score_adj) <= CRITICAL_OOM_SCORE_ADJ;
-}
-
 /*
  * Throttle direct reclaimers if backing storage is backed by the network
  * and the PFMEMALLOC reserve for the preferred node is getting dangerously
