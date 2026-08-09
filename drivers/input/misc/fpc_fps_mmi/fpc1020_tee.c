@@ -518,6 +518,13 @@ static int fpc1020_probe(struct platform_device *pdev)
 		}
 	}
 
+	rc = hw_reset(fpc1020);
+	if (rc) {
+		dev_err(dev, "fpc1020 hw_reset failed, the hardware is not the FPC\n");
+		rc = -ENODEV;
+		goto exit_gpio;
+	}
+
 	rc = device_init_wakeup(fpc1020->dev, true);
 	if (rc)
 		goto exit;
@@ -558,6 +565,15 @@ irq_exit:
 #else
 	sysfs_remove_group(&pdev->dev.kobj, &attribute_group);
 #endif
+exit_gpio:
+	if (gpio_is_valid(fpc1020->irq_gpio)) {
+		devm_gpio_free(dev, fpc1020->irq_gpio);
+		fpc1020->irq_gpio = -1;
+	}
+	if (gpio_is_valid(fpc1020->rst_gpio)) {
+		devm_gpio_free(dev, fpc1020->rst_gpio);
+		fpc1020->rst_gpio = -1;
+	}
 exit:
 err_pwr:
 	if(!IS_ERR_OR_NULL(fpc1020->pwr_supply))
