@@ -69,6 +69,7 @@
 		status = "ok";
 		irq = <&tlmm 17 0>;
 		rst = <&tlmm 18 0>;
+		fp,int-idle-level = <1>;
 		interrupt-parent = <&tlmm>;
 		interrupts = <17 0>;
 		rgltr-ctrl-support;
