@@ -428,6 +428,8 @@ static int fpc1020_probe(struct platform_device *pdev)
 	struct device *dev = &pdev->dev;
 	int rc = 0;
 	int irqf;
+	u32 int_idle_level = 0;
+	int int_val = 0;
 	struct device_node *np = dev->of_node;
 	struct fpc1020_data *fpc1020 = devm_kzalloc(dev, sizeof(*fpc1020),
 			GFP_KERNEL);
@@ -523,6 +525,17 @@ static int fpc1020_probe(struct platform_device *pdev)
 		dev_err(dev, "fpc1020 hw_reset failed, the hardware is not the FPC\n");
 		rc = -ENODEV;
 		goto exit_gpio;
+	}
+
+	if (!of_property_read_u32(np, "fp,int-idle-level", &int_idle_level)) {
+		int_val = gpio_get_value(fpc1020->irq_gpio);
+		if (int_val != int_idle_level) {
+			dev_err(dev,
+				"fpc1020 INT=%d does not match expected level %d, "
+				"the hardware is not the FPC\n", int_val, int_idle_level);
+			rc = -ENODEV;
+			goto exit_gpio;
+		}
 	}
 
 	rc = device_init_wakeup(fpc1020->dev, true);
