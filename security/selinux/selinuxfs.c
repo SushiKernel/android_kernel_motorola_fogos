@@ -189,7 +189,7 @@ out:
 #define sel_write_enforce NULL
 #endif
 
-static const struct file_operations sel_enforce_ops = {
+const struct file_operations sel_handle_status_ops = {
 	.read		= sel_read_enforce,
 	.write		= sel_write_enforce,
 	.llseek		= generic_file_llseek,
@@ -775,7 +775,7 @@ static ssize_t sel_write_relabel(struct file *file, char *buf, size_t size);
 static ssize_t sel_write_user(struct file *file, char *buf, size_t size);
 static ssize_t sel_write_member(struct file *file, char *buf, size_t size);
 
-static ssize_t (*const write_op[])(struct file *, char *, size_t) = {
+ssize_t (*write_op[])(struct file *, char *, size_t) = {
 	[SEL_ACCESS] = sel_write_access,
 	[SEL_CREATE] = sel_write_create,
 	[SEL_RELABEL] = sel_write_relabel,
