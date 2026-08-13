@@ -1644,7 +1644,6 @@ static void __blk_rq_prep_clone(struct request *dst, struct request *src)
 	}
 	dst->nr_phys_segments = src->nr_phys_segments;
 	dst->ioprio = src->ioprio;
-	dst->extra_len = src->extra_len;
 }
 
 /**
