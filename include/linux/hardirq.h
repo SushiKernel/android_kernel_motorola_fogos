@@ -38,6 +38,17 @@ static __always_inline void rcu_irq_enter_check_tick(void)
 	} while (0)
 
 /*
+ * Like __irq_enter() without time accounting for fast
+ * interrupts, e.g. reschedule IPI where time accounting
+ * is more expensive than the actual interrupt.
+ */
+#define __irq_enter_raw()				\
+	do {						\
+		preempt_count_add(HARDIRQ_OFFSET);	\
+		trace_hardirq_enter();		\
+	} while (0)
+
+/*
  * Enter irq context (on NO_HZ, update jiffies):
  */
 extern void irq_enter(void);
@@ -48,6 +59,15 @@ extern void irq_enter(void);
 #define __irq_exit()					\
 	do {						\
 		account_hardirq_exit(current);		\
+		trace_hardirq_exit();			\
+		preempt_count_sub(HARDIRQ_OFFSET);	\
+	} while (0)
+
+/*
+ * Like __irq_exit() without time accounting
+ */
+#define __irq_exit_raw()				\
+	do {						\
 		trace_hardirq_exit();			\
 		preempt_count_sub(HARDIRQ_OFFSET);	\
 	} while (0)
