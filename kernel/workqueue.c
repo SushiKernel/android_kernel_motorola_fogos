@@ -7583,8 +7583,29 @@ static void wq_watchdog_timer_fn(struct timer_list *unused)
 		else
 			ts = touched;
 
-		/* did we stall? */
+		/*
+		 * Did we stall?
+		 *
+		 * Do a lockless check first to do not disturb the system.
+		 *
+		 * Prevent false positives by double checking the timestamp
+		 * under pool->lock. The lock makes sure that the check reads
+		 * an updated pool->last_progress_ts when this CPU saw
+		 * an already updated pool->worklist above. It seems better
+		 * than adding another barrier into __queue_work() which
+		 * is a hotter path.
+		 */
 		if (time_after(now, ts + thresh)) {
+			scoped_guard(raw_spinlock_irqsave, &pool->lock) {
+				pool_ts = pool->last_progress_ts;
+				if (time_after(pool_ts, touched))
+					ts = pool_ts;
+				else
+					ts = touched;
+			}
+			if (!time_after(now, ts + thresh))
+				continue;
+
 			lockup_detected = true;
 			pr_emerg("BUG: workqueue lockup - pool");
 			pr_cont_pool_info(pool);
