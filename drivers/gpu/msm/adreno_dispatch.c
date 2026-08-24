@@ -1090,7 +1090,6 @@ static inline int _verify_cmdobj(struct kgsl_device_private *dev_priv,
 		struct kgsl_context *context, struct kgsl_drawobj *drawobj[],
 		uint32_t count)
 {
-	struct kgsl_device *device = dev_priv->device;
 	struct kgsl_memobj_node *ib;
 	unsigned int i;
 
@@ -1104,11 +1103,6 @@ static inline int _verify_cmdobj(struct kgsl_device_private *dev_priv,
 					&ADRENO_CONTEXT(context)->base, ib))
 					return -EINVAL;
 		}
-
-		/* A3XX does not have support for drawobj profiling */
-		if (adreno_is_a3xx(ADRENO_DEVICE(device)) &&
-			(drawobj[i]->flags & KGSL_DRAWOBJ_PROFILING))
-			return -EOPNOTSUPP;
 	}
 
 	return 0;
