@@ -83,13 +83,7 @@ bool cass_cpu_better(const struct cass_cpu_cand *a,
 	long res;
 
 	/* Prefer the CPU that's not overloaded */
-	if (cass_cmp(b->eff_util / b->cap_max, a->eff_util / a->cap_max))
-		goto done;
-
-	/* Prefer the CPU that's less overloaded if they're both overloaded */
-	if (b->eff_util > b->cap_max && a->eff_util > a->cap_max &&
-	    cass_cmp(b->eff_util * SCHED_CAPACITY_SCALE / b->cap_max,
-		     a->eff_util * SCHED_CAPACITY_SCALE / a->cap_max))
+	if (cass_cmp(b->eff_util * a->cap_max, a->eff_util * b->cap_max))
 		goto done;
 
 	/* Prefer the CPU that fits the task */
@@ -165,6 +159,9 @@ static int cass_best_cpu(struct task_struct *p, int prev_cpu, bool sync, bool rt
 		struct cpuidle_state *idle_state;
 		struct rq *rq = cpu_rq(cpu);
 
+		/* Initialize early so @best->cpu is never garbage */
+		curr->cpu = cpu;
+
 		/* Get the original, maximum _possible_ capacity of this CPU */
 		curr->cap_max = arch_scale_cpu_capacity(cpu);
 
@@ -208,7 +205,6 @@ static int cass_best_cpu(struct task_struct *p, int prev_cpu, bool sync, bool rt
 		}
 
 		/* Get this CPU's capacity and utilization */
-		curr->cpu = cpu;
 		cass_cpu_util(curr, this_cpu, sync);
 
 		/*
