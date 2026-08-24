@@ -7477,6 +7477,7 @@ static void ufshcd_wb_probe(struct ufs_hba *hba, u8 *desc_buf)
 	struct ufs_dev_info *dev_info = &hba->dev_info;
 	u8 lun;
 	u32 d_lu_wb_buf_alloc;
+	u32 ext_ufs_feature;
 
 	if (!ufshcd_is_wb_allowed(hba))
 		return;
@@ -7498,11 +7499,10 @@ static void ufshcd_wb_probe(struct ufs_hba *hba, u8 *desc_buf)
 		goto wb_disabled;
 	}
 
-	dev_info->d_ext_ufs_feature_sup =
-		get_unaligned_be32(desc_buf +
-				   DEVICE_DESC_PARAM_EXT_UFS_FEATURE_SUP);
+	ext_ufs_feature = get_unaligned_be32(desc_buf +
+					DEVICE_DESC_PARAM_EXT_UFS_FEATURE_SUP);
 
-	if (!(dev_info->d_ext_ufs_feature_sup & UFS_DEV_WRITE_BOOSTER_SUP)) {
+	if (!(ext_ufs_feature  & UFS_DEV_WRITE_BOOSTER_SUP)) {
 		dev_err(hba->dev, "%s: ufs device don't support write booster feature, wb_disable\n",__func__);
 		goto wb_disabled;
 	}
@@ -7527,10 +7527,8 @@ static void ufshcd_wb_probe(struct ufs_hba *hba, u8 *desc_buf)
 		desc_buf[DEVICE_DESC_PARAM_WB_PRESRV_USRSPC_EN];
 
 	if (dev_info->b_wb_buffer_type == WB_BUF_MODE_SHARED) {
-		dev_info->d_wb_alloc_units =
-		get_unaligned_be32(desc_buf +
-				   DEVICE_DESC_PARAM_WB_SHARED_ALLOC_UNITS);
-		if (!dev_info->d_wb_alloc_units) {
+		if (!get_unaligned_be32(desc_buf +
+				   DEVICE_DESC_PARAM_WB_SHARED_ALLOC_UNITS)) {
 			dev_err(hba->dev, "%s: read wb_share_alloc_units is 0 , wb_disable\n",__func__);
 			goto wb_disabled;
 		}
