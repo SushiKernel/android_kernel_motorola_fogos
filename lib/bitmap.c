@@ -716,8 +716,6 @@ int bitmap_parselist_user(const char __user *ubuf,
 }
 EXPORT_SYMBOL(bitmap_parselist_user);
 
-
-#ifdef CONFIG_NUMA
 /**
  * bitmap_pos_to_ord - find ordinal of set bit at given position in bitmap
  *	@buf: pointer to a bitmap
@@ -826,6 +824,7 @@ void bitmap_remap(unsigned long *dst, const unsigned long *src,
 			set_bit(bitmap_ord_to_pos(new, n % w, nbits), dst);
 	}
 }
+EXPORT_SYMBOL(bitmap_remap);
 
 /**
  * bitmap_bitremap - Apply map defined by a pair of bitmaps to a single bit
@@ -863,7 +862,9 @@ int bitmap_bitremap(int oldbit, const unsigned long *old,
 	else
 		return bitmap_ord_to_pos(new, n % w, bits);
 }
+EXPORT_SYMBOL(bitmap_bitremap);
 
+#ifdef CONFIG_NUMA
 /**
  * bitmap_onto - translate one bitmap relative to another
  *	@dst: resulting translated bitmap
