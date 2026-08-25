@@ -824,8 +824,7 @@ net_dm_hw_metadata_clone(const struct net_dm_hw_metadata *hw_metadata)
 	n_hw_metadata->trap_name = trap_name;
 
 	n_hw_metadata->input_dev = hw_metadata->input_dev;
-	if (n_hw_metadata->input_dev)
-		dev_hold(n_hw_metadata->input_dev);
+	dev_hold(n_hw_metadata->input_dev);
 
 	return n_hw_metadata;
 
@@ -839,8 +838,7 @@ free_hw_metadata:
 static void
 net_dm_hw_metadata_free(const struct net_dm_hw_metadata *hw_metadata)
 {
-	if (hw_metadata->input_dev)
-		dev_put(hw_metadata->input_dev);
+	dev_put(hw_metadata->input_dev);
 	kfree(hw_metadata->trap_name);
 	kfree(hw_metadata->trap_group_name);
 	kfree(hw_metadata);

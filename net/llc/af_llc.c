@@ -224,8 +224,7 @@ static int llc_ui_release(struct socket *sock)
 	} else {
 		release_sock(sk);
 	}
-	if (llc->dev)
-		dev_put(llc->dev);
+	dev_put(llc->dev);
 	sock_put(sk);
 	sock_orphan(sk);
 	sock->sk = NULL;
@@ -374,8 +373,7 @@ static int llc_ui_bind(struct socket *sock, struct sockaddr *uaddr, int addrlen)
 		dev = dev_getbyhwaddr_rcu(&init_net, addr->sllc_arphrd,
 					   addr->sllc_mac);
 	}
-	if (dev)
-		dev_hold(dev);
+	dev_hold(dev);
 	rcu_read_unlock();
 	if (!dev)
 		goto out;

@@ -55,11 +55,9 @@ static void nf_queue_entry_release_br_nf_refs(struct sk_buff *skb)
 		struct net_device *physdev;
 
 		physdev = nf_bridge_get_physindev(skb);
-		if (physdev)
-			dev_put(physdev);
+		dev_put(physdev);
 		physdev = nf_bridge_get_physoutdev(skb);
-		if (physdev)
-			dev_put(physdev);
+		dev_put(physdev);
 	}
 #endif
 }
@@ -78,10 +76,8 @@ void nf_queue_entry_release_refs(struct nf_queue_entry *entry)
 	struct nf_hook_state *state = &entry->state;
 
 	/* Release those devices we held, or Alexey will kill me. */
-	if (state->in)
-		dev_put(state->in);
-	if (state->out)
-		dev_put(state->out);
+	dev_put(state->in);
+	dev_put(state->out);
 	if (state->sk)
 		nf_queue_sock_put(state->sk);
 
@@ -98,11 +94,9 @@ static void nf_queue_entry_get_br_nf_refs(struct sk_buff *skb)
 		struct net_device *physdev;
 
 		physdev = nf_bridge_get_physindev(skb);
-		if (physdev)
-			dev_hold(physdev);
+		dev_hold(physdev);
 		physdev = nf_bridge_get_physoutdev(skb);
-		if (physdev)
-			dev_hold(physdev);
+		dev_hold(physdev);
 	}
 #endif
 }
@@ -115,10 +109,8 @@ bool nf_queue_entry_get_refs(struct nf_queue_entry *entry)
 	if (state->sk && !refcount_inc_not_zero(&state->sk->sk_refcnt))
 		return false;
 
-	if (state->in)
-		dev_hold(state->in);
-	if (state->out)
-		dev_hold(state->out);
+	dev_hold(state->in);
+	dev_hold(state->out);
 
 	nf_queue_entry_get_br_nf_refs(entry->skb);
 	return true;

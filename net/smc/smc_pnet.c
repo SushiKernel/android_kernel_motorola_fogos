@@ -428,8 +428,7 @@ static int smc_pnet_add(struct sk_buff *skb, struct genl_info *info)
 	rc = smc_pnet_fill_entry(net, &pnetelem, info->attrs);
 	if (!rc)
 		rc = smc_pnet_enter(pnettable, &pnetelem);
-	if (pnetelem.ndev)
-		dev_put(pnetelem.ndev);
+	dev_put(pnetelem.ndev);
 	return rc;
 }
 

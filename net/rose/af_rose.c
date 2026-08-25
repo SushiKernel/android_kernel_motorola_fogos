@@ -604,8 +604,7 @@ static struct sock *rose_make_new(struct sock *osk)
 	rose->idle	= orose->idle;
 	rose->defer	= orose->defer;
 	rose->device	= orose->device;
-	if (rose->device)
-		dev_hold(rose->device);
+	dev_hold(rose->device);
 	rose->qbitincl	= orose->qbitincl;
 
 	return sk;
