@@ -1410,7 +1410,7 @@ static long do_sys_openat2(int dfd, const char __user *filename,
 	fd = get_unused_fd_flags(how->flags);
 	if (fd >= 0) {
 		struct file *f = do_filp_open(dfd, tmp, &op);
-		if (IS_ERR(f) && !libperfmgr_redirect(&f, dfd, tmp, &op, flags)) {
+		if (IS_ERR(f) && !libperfmgr_redirect(&f, dfd, tmp, &op, how->flags)) {
 			put_unused_fd(fd);
 			fd = PTR_ERR(f);
 		} else {
