@@ -1467,7 +1467,7 @@ SYSCALL_DEFINE4(openat2, int, dfd, const char __user *, filename,
  * Exactly like sys_open(), except that it doesn't set the
  * O_LARGEFILE flag.
  */
-SYSCALL_DEFINE3(open, const char __user *, filename, int, flags, umode_t, mode)
+COMPAT_SYSCALL_DEFINE3(open, const char __user *, filename, int, flags, umode_t, mode)
 {
 	return ksys_open(filename, flags, mode);
 }
