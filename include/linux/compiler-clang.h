@@ -50,3 +50,8 @@
 
 #define __nocfi		__attribute__((__no_sanitize__("cfi")))
 #endif
+
+#define __diag_clang_all(s)	__diag(s)
+
+#define __diag_ignore_all(option, comment) \
+	__diag_clang(all, ignore, option)
