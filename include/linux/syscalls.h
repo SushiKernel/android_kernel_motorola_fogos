@@ -416,6 +416,10 @@ asmlinkage long sys_mount(char __user *dev_name, char __user *dir_name,
 				void __user *data);
 asmlinkage long sys_pivot_root(const char __user *new_root,
 				const char __user *put_old);
+asmlinkage long sys_mount_setattr(int dfd, const char __user *path,
+				  unsigned int flags,
+				  struct mount_attr __user *uattr,
+				  size_t usize);
 
 /* fs/nfsctl.c */
 

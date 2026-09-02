@@ -3862,6 +3862,228 @@ out0:
 	return error;
 }
 
+/*
+ * Convert mount_attr flags to internal MNT_* flags.
+ */
+static int build_mount_flags(const struct mount_attr *attr, unsigned int *mnt_flags)
+{
+	unsigned int flags = 0;
+	unsigned int atime;
+
+	if (attr->attr_set & MOUNT_ATTR_RDONLY)
+		flags |= MNT_READONLY;
+	if (attr->attr_set & MOUNT_ATTR_NOSUID)
+		flags |= MNT_NOSUID;
+	if (attr->attr_set & MOUNT_ATTR_NODEV)
+		flags |= MNT_NODEV;
+	if (attr->attr_set & MOUNT_ATTR_NOEXEC)
+		flags |= MNT_NOEXEC;
+	if (attr->attr_set & MOUNT_ATTR_NODIRATIME)
+		flags |= MNT_NODIRATIME;
+
+	atime = attr->attr_set & MOUNT_ATTR__ATIME;
+	switch (atime) {
+	case MOUNT_ATTR_RELATIME:
+		flags |= MNT_RELATIME;
+		break;
+	case MOUNT_ATTR_NOATIME:
+		flags |= MNT_NOATIME;
+		break;
+	case MOUNT_ATTR_STRICTATIME:
+		/* strict is the default when nothing else is set */
+		break;
+	default:
+		if (atime)
+			return -EINVAL;
+		break;
+	}
+
+	*mnt_flags = flags;
+	return 0;
+}
+
+static int mount_setattr_prepare(struct mount_attr *attr)
+{
+	unsigned int allowed = MOUNT_ATTR_RDONLY | MOUNT_ATTR_NOSUID |
+			       MOUNT_ATTR_NODEV | MOUNT_ATTR_NOEXEC |
+			       MOUNT_ATTR__ATIME | MOUNT_ATTR_NODIRATIME;
+
+	/* attr_set and attr_clr must not overlap */
+	if (attr->attr_set & attr->attr_clr)
+		return -EINVAL;
+
+	/* No unknown flags */
+	if (attr->attr_set & ~allowed)
+		return -EINVAL;
+	if (attr->attr_clr & ~allowed)
+		return -EINVAL;
+
+	/* ID-mapped mounts are not supported in this backport */
+	if (attr->userns_fd)
+		return -EINVAL;
+
+	/* Validate propagation if requested */
+	if (attr->propagation) {
+		if (attr->propagation & ~(unsigned long)(MS_SHARED | MS_PRIVATE |
+						    MS_SLAVE | MS_UNBINDABLE))
+			return -EINVAL;
+		if (!is_power_of_2(attr->propagation))
+			return -EINVAL;
+	}
+
+	/* Cannot set and clear atime flags simultaneously */
+	if ((attr->attr_set & MOUNT_ATTR__ATIME) &&
+	    (attr->attr_clr & MOUNT_ATTR__ATIME))
+		return -EINVAL;
+
+	return 0;
+}
+
+/*
+ * Apply attribute changes to a single mount. Caller must hold
+ * mount_hash write lock.
+ */
+static int do_mount_setattr_one(struct mount *mnt,
+				const struct mount_attr *attr,
+				unsigned int new_flags)
+{
+	unsigned int mnt_flags;
+
+	mnt_flags = mnt->mnt.mnt_flags;
+
+	/* Clear requested bits */
+	if (attr->attr_clr & MOUNT_ATTR_RDONLY)
+		mnt_flags &= ~MNT_READONLY;
+	if (attr->attr_clr & MOUNT_ATTR_NOSUID)
+		mnt_flags &= ~MNT_NOSUID;
+	if (attr->attr_clr & MOUNT_ATTR_NODEV)
+		mnt_flags &= ~MNT_NODEV;
+	if (attr->attr_clr & MOUNT_ATTR_NOEXEC)
+		mnt_flags &= ~MNT_NOEXEC;
+	if (attr->attr_clr & MOUNT_ATTR_NODIRATIME)
+		mnt_flags &= ~MNT_NODIRATIME;
+	if (attr->attr_clr & MOUNT_ATTR__ATIME)
+		mnt_flags &= ~MNT_ATIME_MASK;
+
+	/* Set requested bits */
+	mnt_flags |= new_flags;
+
+	/* Refuse to touch flags locked by a parent/userns */
+	if (!can_change_locked_flags(mnt, mnt_flags))
+		return -EPERM;
+
+	mnt->mnt.mnt_flags = mnt_flags;
+	touch_mnt_namespace(mnt->mnt_ns);
+	return 0;
+}
+
+/*
+ * mount_setattr(2) - Change mount attributes.
+ *
+ * Sets or clears mount flags (RDONLY, NOSUID, NODEV, NOEXEC, atime
+ * modes) and optionally changes mount propagation type. Can operate
+ * recursively on the entire subtree if AT_RECURSIVE is specified.
+ */
+SYSCALL_DEFINE5(mount_setattr,
+	int, dfd,
+	const char __user *, path,
+	unsigned int, flags,
+	struct mount_attr __user *, uattr,
+	size_t, usize)
+{
+	struct mount_attr attr = {};
+	struct path target;
+	struct mount *mnt, *m;
+	unsigned int new_flags;
+	unsigned int lookup_flags = LOOKUP_AUTOMOUNT | LOOKUP_FOLLOW;
+	int ret;
+
+	if (!may_mount())
+		return -EPERM;
+
+	if (flags & ~(AT_EMPTY_PATH | AT_RECURSIVE |
+		      AT_SYMLINK_NOFOLLOW | AT_NO_AUTOMOUNT))
+		return -EINVAL;
+
+	if (flags & AT_SYMLINK_NOFOLLOW)
+		lookup_flags &= ~LOOKUP_FOLLOW;
+	if (flags & AT_NO_AUTOMOUNT)
+		lookup_flags &= ~LOOKUP_AUTOMOUNT;
+	if (flags & AT_EMPTY_PATH)
+		lookup_flags |= LOOKUP_EMPTY;
+
+	if (usize < MOUNT_ATTR_SIZE_VER0)
+		return -EINVAL;
+	if (usize > sizeof(attr))
+		return -E2BIG;
+	if (copy_from_user(&attr, uattr, usize))
+		return -EFAULT;
+
+	ret = mount_setattr_prepare(&attr);
+	if (ret)
+		return ret;
+
+	ret = build_mount_flags(&attr, &new_flags);
+	if (ret)
+		return ret;
+
+	ret = user_path_at(dfd, path, lookup_flags, &target);
+	if (ret)
+		return ret;
+
+	mnt = real_mount(target.mnt);
+
+	ret = -EINVAL;
+	if (target.dentry != target.mnt->mnt_root)
+		goto out;
+
+	/* Handle propagation change if requested */
+	if (attr.propagation) {
+		int ms_flags = attr.propagation;
+
+		if (flags & AT_RECURSIVE)
+			ms_flags |= MS_REC;
+
+		/* do_change_type handles its own locking */
+		ret = do_change_type(&target, ms_flags);
+		if (ret)
+			goto out;
+
+		/* If only propagation was requested, we're done */
+		if (!attr.attr_set && !attr.attr_clr) {
+			ret = 0;
+			goto out;
+		}
+	}
+
+	/* Apply attribute changes under proper locking */
+	namespace_lock();
+
+	ret = -EINVAL;
+	if (!check_mnt(mnt)) {
+		namespace_unlock();
+		goto out;
+	}
+
+	lock_mount_hash();
+	if (flags & AT_RECURSIVE) {
+		for (m = mnt; m; m = next_mnt(m, mnt)) {
+			ret = do_mount_setattr_one(m, &attr, new_flags);
+			if (ret)
+				break;
+		}
+	} else {
+		ret = do_mount_setattr_one(mnt, &attr, new_flags);
+	}
+	unlock_mount_hash();
+
+	namespace_unlock();
+
+out:
+	path_put(&target);
+	return ret;
+}
+
 static void __init init_mount_tree(void)
 {
 	struct vfsmount *mnt;
