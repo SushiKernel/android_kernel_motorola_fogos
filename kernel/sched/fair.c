@@ -3929,12 +3929,10 @@ static inline int throttled_hierarchy(struct cfs_rq *cfs_rq);
  *
  * hence icky!
  */
-static long calc_group_shares(struct cfs_rq *cfs_rq)
+static long __calc_smp_shares(struct cfs_rq *cfs_rq, long tg_shares, long shares_max)
 {
-	long tg_weight, tg_shares, load, shares;
 	struct task_group *tg = cfs_rq->tg;
-
-	tg_shares = READ_ONCE(tg->shares);
+	long tg_weight, load, shares;
 
 	load = max(scale_load_down(cfs_rq->load.weight), cfs_rq->avg.load_avg);
 
@@ -3960,9 +3958,22 @@ static long calc_group_shares(struct cfs_rq *cfs_rq)
 	 * case no task is runnable on a CPU MIN_SHARES=2 should be returned
 	 * instead of 0.
 	 */
-	return clamp_t(long, shares, MIN_SHARES, tg_shares);
+	return clamp_t(long, shares, MIN_SHARES, shares_max);
 }
 #endif /* CONFIG_SMP */
+
+static inline int tg_tasks(struct task_group *tg)
+{
+	return max(1, atomic_long_read(&tg->runnable_avg) >> SCHED_CAPACITY_SHIFT);
+}
+
+static long calc_concur_shares(struct cfs_rq *cfs_rq)
+{
+	struct task_group *tg = cfs_rq->tg;
+	int nr = min(tg_tasks(tg), num_online_cpus());
+	long tg_shares = READ_ONCE(tg->shares);
+	return __calc_smp_shares(cfs_rq, nr * tg_shares, nr * tg_shares);
+}
 
 /*
  * Recomputes the group entity based on the current state of its group
@@ -3986,7 +3997,7 @@ static void update_cfs_group(struct sched_entity *se)
 #ifndef CONFIG_SMP
 	shares = READ_ONCE(gcfs_rq->tg->shares);
 #else
-	shares = calc_group_shares(gcfs_rq);
+	shares = calc_concur_shares(gcfs_rq);
 #endif
 	if (unlikely(se->load.weight != shares))
 		reweight_entity(cfs_rq_of(se), se, shares);
@@ -4112,7 +4123,7 @@ static inline bool cfs_rq_is_decayed(struct cfs_rq *cfs_rq)
  */
 static inline void update_tg_load_avg(struct cfs_rq *cfs_rq)
 {
-	long delta;
+	long dl, dr;
 	u64 now;
 
 	/*
@@ -4129,10 +4140,14 @@ static inline void update_tg_load_avg(struct cfs_rq *cfs_rq)
 	if (now - cfs_rq->last_update_tg_load_avg < NSEC_PER_MSEC)
 		return;
 
-	delta = cfs_rq->avg.load_avg - cfs_rq->tg_load_avg_contrib;
-	if (abs(delta) > cfs_rq->tg_load_avg_contrib / 64) {
-		atomic_long_add(delta, &cfs_rq->tg->load_avg);
+	dl = cfs_rq->avg.load_avg - cfs_rq->tg_load_avg_contrib;
+	dr = cfs_rq->avg.runnable_avg - cfs_rq->tg_runnable_avg_contrib;
+	if (abs(dl) > cfs_rq->tg_load_avg_contrib / 64 ||
+	    abs(dr) > cfs_rq->tg_runnable_avg_contrib / 64) {
+		atomic_long_add(dl, &cfs_rq->tg->load_avg);
+		atomic_long_add(dr, &cfs_rq->tg->runnable_avg);
 		cfs_rq->tg_load_avg_contrib = cfs_rq->avg.load_avg;
+		cfs_rq->tg_runnable_avg_contrib = cfs_rq->avg.runnable_avg;
 		cfs_rq->last_update_tg_load_avg = now;
 	}
 }
