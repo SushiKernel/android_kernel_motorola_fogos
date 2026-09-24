@@ -20,6 +20,9 @@ static ssize_t torch_brightness_store(struct device *dev,
 	struct platform_device *pdev = to_platform_device(dev);
 	struct cam_flash_ctrl *fctrl = platform_get_drvdata(pdev);
 	int val;
+	static unsigned long last_write_jiffies = 0;
+	const unsigned long min_write_interval = msecs_to_jiffies(10); /* 10ms = 100Hz max */
+	unsigned long now = jiffies;
 
 	if (kstrtoint(buf, 10, &val))
 		return -EINVAL;
@@ -28,35 +31,38 @@ static ssize_t torch_brightness_store(struct device *dev,
 	cam_torch_brightness_level = val;
 
 	/* If torch is currently active, write directly to the hardware registers */
+	mutex_lock(&(fctrl->flash_mutex));
 	if (fctrl && fctrl->flash_state == CAM_FLASH_STATE_START && val >= 0) {
-		struct cam_sensor_i2c_reg_setting write_setting;
-		struct cam_sensor_i2c_reg_array reg_setting[2];
-		int rc;
+		/* Rate limit direct hardware writes to prevent flickering from rapid updates */
+		if (time_after_eq(now, last_write_jiffies + min_write_interval)) {
+			struct cam_sensor_i2c_reg_setting write_setting;
+			struct cam_sensor_i2c_reg_array reg_setting[2];
+			int rc;
 
-		reg_setting[0].reg_addr = 0x05;
-		reg_setting[0].reg_data = (uint16_t)(val & 0x7F);
-		reg_setting[0].delay = 0;
-		reg_setting[0].data_mask = 0;
+			reg_setting[0].reg_addr = 0x05;
+			reg_setting[0].reg_data = (uint16_t)(val & 0x7F);
+			reg_setting[0].delay = 0;
+			reg_setting[0].data_mask = 0;
 
-		reg_setting[1].reg_addr = 0x06;
-		reg_setting[1].reg_data = (uint16_t)(val & 0x7F);
-		reg_setting[1].delay = 0;
-		reg_setting[1].data_mask = 0;
+			reg_setting[1].reg_addr = 0x06;
+			reg_setting[1].reg_data = (uint16_t)(val & 0x7F);
+			reg_setting[1].delay = 0;
+			reg_setting[1].data_mask = 0;
 
-		write_setting.reg_setting = reg_setting;
-		write_setting.size = 2;
-		write_setting.addr_type = CAMERA_SENSOR_I2C_TYPE_BYTE;
-		write_setting.data_type = CAMERA_SENSOR_I2C_TYPE_BYTE;
-		write_setting.delay = 0;
+			write_setting.reg_setting = reg_setting;
+			write_setting.size = 2;
+			write_setting.addr_type = CAMERA_SENSOR_I2C_TYPE_BYTE;
+			write_setting.data_type = CAMERA_SENSOR_I2C_TYPE_BYTE;
+			write_setting.delay = 0;
 
-		mutex_lock(&(fctrl->flash_mutex));
-		if (fctrl->flash_state == CAM_FLASH_STATE_START) {
 			rc = camera_io_dev_write(&(fctrl->io_master_info), &write_setting);
 			if (rc)
 				CAM_ERR(CAM_FLASH, "Failed to apply live torch brightness: %d", rc);
+			else
+				last_write_jiffies = now;
 		}
-		mutex_unlock(&(fctrl->flash_mutex));
 	}
+	mutex_unlock(&(fctrl->flash_mutex));
 
 	return count;
 }
