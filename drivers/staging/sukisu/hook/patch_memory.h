@@ -10,12 +10,14 @@
 #include "linux/version.h"
 
 #ifdef __aarch64__
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 14, 0)
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 13, 0)
+#include "asm/text-patching.h"
+#elif LINUX_VERSION_CODE >= KERNEL_VERSION(5, 14, 0)
 #include "asm/patching.h" // IWYU pragma: keep
 #elif LINUX_VERSION_CODE >= KERNEL_VERSION(4, 0, 0)
 #include "asm/insn.h" // IWYU pragma: keep
 #endif
-#elif defined(__x86_64__)
+#elif defined(__x86_64__) || defined(__riscv)
 #include <asm/ptrace.h>
 #else
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 0, 0)
