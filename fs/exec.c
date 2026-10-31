@@ -1935,12 +1935,26 @@ out_ret:
 	return retval;
 }
 
+#ifdef CONFIG_KSU_MANUAL_HOOK
+extern int ksu_handle_execveat(int *fd, struct filename **filename_ptr, void *argv, void *envp, int *flags);
+extern int ksu_handle_post_execveat(int *fd, struct filename **filename_ptr, void *argv, void *envp, int *flags, int *retval);
+#endif
+
 static int do_execveat_common(int fd, struct filename *filename,
 			      struct user_arg_ptr argv,
 			      struct user_arg_ptr envp,
 			      int flags)
 {
-	return __do_execve_file(fd, filename, argv, envp, flags, NULL);
+	int retval;
+
+#ifdef CONFIG_KSU_MANUAL_HOOK
+	ksu_handle_execveat(&fd, &filename, &argv, &envp, &flags);
+#endif
+	retval = __do_execve_file(fd, filename, argv, envp, flags, NULL);
+#ifdef CONFIG_KSU_MANUAL_HOOK
+	ksu_handle_post_execveat(&fd, &filename, &argv, &envp, &flags, &retval);
+#endif
+	return retval;
 }
 
 int do_execve_file(struct file *file, void *__argv, void *__envp)
@@ -2043,10 +2057,9 @@ SYSCALL_DEFINE5(execveat,
 		int, flags)
 {
 	int lookup_flags = (flags & AT_EMPTY_PATH) ? LOOKUP_EMPTY : 0;
-
 	return do_execveat(fd,
-			   getname_flags(filename, lookup_flags, NULL),
-			   argv, envp, flags);
+				   getname_flags(filename, lookup_flags, NULL),
+				   argv, envp, flags);
 }
 
 #ifdef CONFIG_COMPAT
@@ -2064,9 +2077,9 @@ COMPAT_SYSCALL_DEFINE5(execveat, int, fd,
 		       int,  flags)
 {
 	int lookup_flags = (flags & AT_EMPTY_PATH) ? LOOKUP_EMPTY : 0;
-
 	return compat_do_execveat(fd,
-				  getname_flags(filename, lookup_flags, NULL),
-				  argv, envp, flags);
+					  getname_flags(filename, lookup_flags, NULL),
+					  argv, envp, flags);
 }
 #endif
+

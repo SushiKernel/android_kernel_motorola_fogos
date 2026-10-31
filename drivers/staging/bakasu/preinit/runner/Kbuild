@@ -1,0 +1,4 @@
+# SPDX-License-Identifier: GPL-2.0
+# runner is a userspace binary built separately, not part of kernel module
+
+obj-y :=

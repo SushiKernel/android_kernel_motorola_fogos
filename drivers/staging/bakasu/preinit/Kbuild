@@ -1,0 +1,5 @@
+# SPDX-License-Identifier: GPL-2.0
+# preinit/runner is a userspace binary built separately, not part of kernel module
+
+# Empty obj-y to prevent kbuild from processing this directory
+obj-y :=
