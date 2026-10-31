@@ -15,7 +15,7 @@
 #include "nolibc.h"
 #include <linux/elf.h>
 
-#include "uapi/supercall.h"
+#include "../../uapi/supercall.h"
 
 /* Overridable for host testing. */
 #ifndef INIT_PATH
