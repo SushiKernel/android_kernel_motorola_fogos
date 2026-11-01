@@ -37,14 +37,17 @@ void setup_ksu_cred(void);
 // Manual hook function declarations - matching bakasu guide exactly
 #ifdef CONFIG_KSU_MANUAL_HOOK
 // stat hooks - take pointers for su path redirection
+#ifdef CONFIG_KSU_SUSFS
+extern __attribute__((hot)) int ksu_handle_stat(int *dfd, struct filename **filename, int *flags);
+extern int ksu_handle_faccessat(int *dfd, struct filename **filename, int *mode, int *__unused_flags);
+#else
 extern __attribute__((hot)) int ksu_handle_stat(int *dfd, const char __user **filename_user, int *flags);
+extern int ksu_handle_faccessat(int *dfd, const char __user **filename_user, int *mode, int *flags);
+#endif
 extern void ksu_handle_newfstat_ret(unsigned int *fd, struct stat __user **statbuf_ptr);
 #if defined(__ARCH_WANT_STAT64) || defined(__ARCH_WANT_COMPAT_STAT64)
 extern void ksu_handle_fstat64_ret(unsigned long *fd, struct stat64 __user **statbuf_ptr);
 #endif
-
-// faccessat hook - takes pointers
-extern int ksu_handle_faccessat(int *dfd, const char __user **filename_user, int *mode, int *flags);
 
 // execve hooks - take pointers
 extern int ksu_handle_execveat(int *fd, struct filename **filename_ptr, void *argv, void *envp, int *flags);
