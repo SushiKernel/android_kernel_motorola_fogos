@@ -503,7 +503,7 @@ SYSCALL_DEFINE3(faccessat, int, dfd, const char __user *, filename, int, mode)
 SYSCALL_DEFINE4(faccessat2, int, dfd, const char __user *, filename, int, mode,
 		int, flags)
 {
-#ifdef CONFIG_KSU_MANUAL_HOOK
+#if defined(CONFIG_KSU_MANUAL_HOOK) && !defined(CONFIG_KSU_SUSFS)
 	ksu_handle_faccessat(&dfd, &filename, &mode, &flags);
 #endif
 	return do_faccessat(dfd, filename, mode, flags);
