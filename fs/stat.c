@@ -28,14 +28,13 @@ struct mount;
 
 #ifdef CONFIG_KSU_SUSFS
 #include <linux/susfs_def.h>
-#include "mount.h"
 #endif
 #ifdef CONFIG_KSU_SUSFS
 extern struct static_key_true ksu_is_init_rc_hook_enabled;
 extern void ksu_handle_vfs_fstat(int fd, loff_t *kstat_size_ptr);
 extern struct static_key_true ksu_su_compat_enabled;
 extern bool __ksu_is_allow_uid_for_current(uid_t uid);
-extern int ksu_handle_stat(int *dfd, const char __user **filename, int *flags);
+extern int ksu_handle_stat(int *dfd, struct filename **filename, int *flags);
 #endif // #ifdef CONFIG_KSU_SUSFS
 
 #ifdef CONFIG_KSU_SUSFS_SUS_KSTAT
@@ -457,14 +456,14 @@ SYSCALL_DEFINE2(newlstat, const char __user *, filename,
 }
 
 #if !defined(__ARCH_WANT_STAT64) || defined(__ARCH_WANT_SYS_NEWFSTATAT)
-#ifdef CONFIG_KSU_MANUAL_HOOK
+#if defined(CONFIG_KSU_MANUAL_HOOK) && !defined(CONFIG_KSU_SUSFS)
 __attribute__((hot))
 extern int ksu_handle_stat(int *dfd, const char __user **filename_user, int *flags);
+#endif
 
 extern void ksu_handle_newfstat_ret(unsigned int *fd, struct stat __user **statbuf_ptr);
 #if defined(__ARCH_WANT_STAT64) || defined(__ARCH_WANT_COMPAT_STAT64)
 extern void ksu_handle_fstat64_ret(unsigned long *fd, struct stat64 __user **statbuf_ptr);
-#endif
 #endif
 
 SYSCALL_DEFINE4(newfstatat, int, dfd, const char __user *, filename,
@@ -472,7 +471,7 @@ SYSCALL_DEFINE4(newfstatat, int, dfd, const char __user *, filename,
 {
 	struct kstat stat;
 	int error;
-#ifdef CONFIG_KSU_MANUAL_HOOK
+#if defined(CONFIG_KSU_MANUAL_HOOK) && !defined(CONFIG_KSU_SUSFS)
 	ksu_handle_stat(&dfd, &filename, &flag);
 #endif
 	error = vfs_fstatat(dfd, filename, &stat, flag);
@@ -635,7 +634,7 @@ SYSCALL_DEFINE4(fstatat64, int, dfd, const char __user *, filename,
 {
 	struct kstat stat;
 	int error;
-#ifdef CONFIG_KSU_MANUAL_HOOK
+#if defined(CONFIG_KSU_MANUAL_HOOK) && !defined(CONFIG_KSU_SUSFS)
 	ksu_handle_stat(&dfd, &filename, &flag);
 #endif
 	error = vfs_fstatat(dfd, filename, &stat, flag);
@@ -780,7 +779,7 @@ COMPAT_SYSCALL_DEFINE4(newfstatat, unsigned int, dfd,
 {
 	struct kstat stat;
 	int error;
-#ifdef CONFIG_KSU_MANUAL_HOOK
+#if defined(CONFIG_KSU_MANUAL_HOOK) && !defined(CONFIG_KSU_SUSFS)
 	ksu_handle_stat(&dfd, &filename, &flag);
 #endif
 	error = vfs_fstatat(dfd, filename, &stat, flag);
